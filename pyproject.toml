@@ -1,0 +1,22 @@
+[project]
+name = "v3_ema"
+version = "0.4.0"
+description = "Victoria 3 Econometrics Automation (V3_EMA): parses game script data and produces an Excel report of building/production-method economics."
+requires-python = ">=3.10"
+dependencies = [
+    "openpyxl>=3.1",
+]
+
+[project.optional-dependencies]
+pandas = ["pandas>=2.0"]
+
+[project.scripts]
+v3-ema = "v3_ema.cli:main"
+
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["v3_ema*"]
