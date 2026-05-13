@@ -115,6 +115,48 @@ Output location: `V3_EMA\out\regions\{reports,diffs}\`.
 
 The report buckets states into 14 continent groups (Western Europe / Southern Europe / Northern Europe / Eastern Europe / North America / Central America / South America / Africa / Middle East / Central Asia / India / East Asia / Southeast Asia / Oceania). **Row 2 is a totals row** (sum of all states' resources within the bucket). Each row's core fields: State / Strategic Region / Arable Land / Arable Buildings / Capped Total / **per-resource columns** (Iron Mine / Coal Mine / Logging Camp / Oil Rig / etc., easy to sort & compare) / Total Capacity / State Traits.
 
+### Feature 3: Pop-Growth & Workforce-Ratio Analysis
+
+```powershell
+# Bilingual HTML reports + CSV raw data (default)
+python -m v3_ema demography report
+
+# English only
+python -m v3_ema demography report --ui-lang en
+# Chinese only
+python -m v3_ema demography report --ui-lang zh
+
+# Custom projection (default: 100 years, SoL 15, 25% → 50% workforce ratio)
+python -m v3_ema demography report --months 600 --projection-sol 12 \
+    --initial-workforce-ratio 0.20 --projection-target 0.45
+
+# Linear SoL trajectory from 8 to 14 across the projection window
+python -m v3_ema demography report --sol-start 8 --sol-end 14
+
+# Skip the slow scan of game/common (faster, but the modifier-source CSV and
+# the modifier-frequency bar chart in the HTML are then empty)
+python -m v3_ema demography report --skip-modifier-scan
+
+# Disable the WORKING_ADULT_RATIO_SKEW_MAXIMUM correction (legacy uniform model)
+python -m v3_ema demography report --no-skew
+```
+
+Output location: `V3_EMA\out\demography\`.
+
+Per run (default `--ui-lang both`):
+
+- `demography_report_{en,zh}.html` — compact chart + data report
+- `demography_analysis_report_{en,zh}.html` — academic-style analysis report (base curves, sensitivities, controlled healthcare comparison, quantitative limitations)
+- `rates_by_sol.csv` — birth / mortality / net growth by SoL × scenario
+- `net_growth_sensitivity.csv` — one-factor-at-a-time net-growth sensitivities
+- `workforce_projection.csv` — 100-year workforce-ratio and population trajectories per scenario
+- `workforce_sensitivity.csv` — same projection isolated per factor
+- `modifier_sources.csv` / `modifier_source_summary.csv` — scan of every relevant modifier hit in `game/common`
+- `pollution_impact_examples.csv` — steady-state pollution generation → impact reference
+- `pollution_dynamics.csv` — monthly transient pollution build-up
+
+The report is driven by the population curves in `defines/00_defines.txt`, the health-system laws in `laws/00_health_system.txt`, the women's-rights laws in `laws/00_rights_of_women.txt`, and the literacy / starvation static modifiers in `static_modifiers/00_code_static_modifiers.txt`. Law / health / starvation values are parsed live from `game/common` by default (`--scenarios-from game`), so any stale hardcoded value would be overridden; pass `--scenarios-from hardcoded` to use the constants frozen in `v3_ema/demography/scenarios.py`.
+
 ### Utility Commands
 
 ```powershell

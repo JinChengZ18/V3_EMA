@@ -18,6 +18,26 @@ from .analysis.diff import diff_snapshots, read_report
 from .analysis.regions import build_region_rows
 from .analysis.regions_diff import diff_regions_snapshots, read_regions_report
 from .analysis.rows import build_rows
+from .demography.constants import PopGrowthConstants
+from .demography.game_modifiers import (
+    build_scenarios_from_game,
+    build_sensitivity_scenarios_from_game,
+)
+from .demography.model import pollution_impact_from_generation, simulate_pollution
+from .demography.modifier_scan import scan_modifier_sources, summarize_sources
+from .demography.report import build_analysis_report, build_html_report
+from .demography.rows import (
+    make_grouped_rates_rows,
+    make_projection_rows,
+    make_rates_rows,
+    make_workforce_sensitivity_rows,
+    write_csv as write_demography_csv,
+)
+from .demography.scenarios import (
+    NET_SENSITIVITY_GROUP_KEYS,
+    default_scenarios,
+    workforce_sensitivity_scenarios,
+)
 from .i18n import get_ui, ui_lang_for
 from .output.csv_writer import write_csv
 from .output.diff_writer import write_diff_xlsx
@@ -35,6 +55,7 @@ DEFAULT_BUILDINGS_REPORTS_DIR = DEFAULT_OUT_DIR / "buildings" / "reports"
 DEFAULT_BUILDINGS_DIFFS_DIR = DEFAULT_OUT_DIR / "buildings" / "diffs"
 DEFAULT_REGIONS_REPORTS_DIR = DEFAULT_OUT_DIR / "regions" / "reports"
 DEFAULT_REGIONS_DIFFS_DIR = DEFAULT_OUT_DIR / "regions" / "diffs"
+DEFAULT_DEMOGRAPHY_DIR = DEFAULT_OUT_DIR / "demography"
 # Bundled baselines that ship with the project — let users diff right away
 # without having to first generate one for the previous game version.
 DEFAULT_BASELINES_DIR = Path(__file__).resolve().parent.parent / "baselines"
@@ -323,6 +344,207 @@ def cmd_regions_diff(args: argparse.Namespace) -> int:
     return 0
 
 
+def _demography_languages(args: argparse.Namespace) -> list[str]:
+    """Resolve the list of UI languages to emit demography HTML for."""
+    if args.ui_lang == "both":
+        return ["en", "zh"]
+    if args.ui_lang == "auto":
+        return [_resolve_ui_lang(args)]
+    return [args.ui_lang]
+
+
+def cmd_demography_report(args: argparse.Namespace) -> int:
+    """Population-growth and workforce-ratio analysis report (HTML + CSV)."""
+    game_root = _resolve_game_root(args)
+    if game_root is None:
+        return 2
+
+    if (args.sol_start is None) != (args.sol_end is None):
+        log.error("--sol-start and --sol-end must be provided together.")
+        return 2
+
+    out_dir: Path = args.out if args.out else DEFAULT_DEMOGRAPHY_DIR
+    out_dir.mkdir(parents=True, exist_ok=True)
+
+    constants = PopGrowthConstants.from_game_root(game_root)
+    if args.scenarios_from == "game":
+        scenarios = build_scenarios_from_game(game_root, constants)
+        sensitivity_groups_all = build_sensitivity_scenarios_from_game(game_root, constants)
+    else:
+        scenarios = default_scenarios(constants)
+        sensitivity_groups_all = workforce_sensitivity_scenarios(constants)
+    growth_sensitivity_groups = {
+        key: sensitivity_groups_all[key] for key in NET_SENSITIVITY_GROUP_KEYS
+    }
+    rates_rows = make_rates_rows(scenarios, constants, args.sol_min, args.sol_max)
+    growth_sensitivity_rows = make_grouped_rates_rows(
+        growth_sensitivity_groups, constants, args.sol_min, args.sol_max
+    )
+    projection_initial_ratio = (
+        args.initial_workforce_ratio
+        if args.initial_workforce_ratio is not None
+        else constants.working_adult_ratio_base
+    )
+    projection_target_ratio = (
+        args.projection_target
+        if args.projection_target is not None
+        else constants.working_adult_ratio_base + 0.25
+    )
+    use_skew = not args.no_skew
+    sol_trajectory = None
+    if args.sol_start is not None:
+        start = args.sol_start
+        end = args.sol_end
+        duration_years = max(args.months / 12.0, 1e-9)
+
+        def sol_trajectory(year: float, _s=start, _e=end, _d=duration_years) -> float:
+            t = min(max(year / _d, 0.0), 1.0)
+            return _s + (_e - _s) * t
+
+    projection_rows = make_projection_rows(
+        scenarios,
+        constants,
+        sol=args.projection_sol,
+        months=args.months,
+        population=args.population,
+        initial_workforce_ratio=projection_initial_ratio,
+        target_workforce_ratio=projection_target_ratio,
+        sol_trajectory=sol_trajectory,
+        use_skew=use_skew,
+    )
+    sensitivity_rows = make_workforce_sensitivity_rows(
+        sensitivity_groups_all,
+        constants,
+        sol=args.projection_sol,
+        months=args.months,
+        population=args.population,
+        initial_workforce_ratio=projection_initial_ratio,
+        default_target_workforce_ratio=projection_target_ratio,
+        sol_trajectory=sol_trajectory,
+        use_skew=use_skew,
+    )
+
+    if args.skip_modifier_scan:
+        source_rows: list[dict[str, object]] = []
+        source_summary: list[dict[str, str | float | int]] = []
+    else:
+        sources = scan_modifier_sources(game_root)
+        source_rows = [
+            {
+                "key": source.key,
+                "value": source.value,
+                "file": source.file,
+                "line_number": source.line_number,
+                "scope": source.scope,
+                "line": source.line,
+            }
+            for source in sources
+        ]
+        source_summary = summarize_sources(sources)
+
+    written: list[Path] = []
+
+    if not args.no_csv:
+        write_demography_csv(out_dir / "rates_by_sol.csv", rates_rows)
+        write_demography_csv(out_dir / "net_growth_sensitivity.csv", growth_sensitivity_rows)
+        write_demography_csv(out_dir / "workforce_projection.csv", projection_rows)
+        write_demography_csv(out_dir / "workforce_sensitivity.csv", sensitivity_rows)
+        written += [
+            out_dir / "rates_by_sol.csv",
+            out_dir / "net_growth_sensitivity.csv",
+            out_dir / "workforce_projection.csv",
+            out_dir / "workforce_sensitivity.csv",
+        ]
+        if not args.skip_modifier_scan:
+            write_demography_csv(out_dir / "modifier_sources.csv", source_rows)
+            write_demography_csv(out_dir / "modifier_source_summary.csv", source_summary)
+            written += [out_dir / "modifier_sources.csv", out_dir / "modifier_source_summary.csv"]
+
+    # Pollution example tables — needed by both CSV output and HTML, so build
+    # them unconditionally.
+    pollution_examples: list[dict[str, object]] = []
+    for generated in (0, 100, 250, 500, 1000, 2000, 5000):
+        for arable in (20, 100, 300):
+            pollution_examples.append(
+                {
+                    "generated_pollution": generated,
+                    "arable_land": arable,
+                    "pollution_impact": pollution_impact_from_generation(generated, arable, constants),
+                }
+            )
+    dynamics_rows: list[dict[str, object]] = []
+    if args.pollution_dynamics_months > 0:
+        for generated, arable in (
+            (500, 100),
+            (1000, 100),
+            (2000, 100),
+            (5000, 100),
+            (1000, 300),
+        ):
+            for row in simulate_pollution(
+                float(generated),
+                float(arable),
+                constants,
+                months=args.pollution_dynamics_months,
+            ):
+                dynamics_rows.append({"label": f"gen={generated}, arable={arable}", **row})
+
+    if not args.no_csv:
+        write_demography_csv(out_dir / "pollution_impact_examples.csv", pollution_examples)
+        written.append(out_dir / "pollution_impact_examples.csv")
+        if dynamics_rows:
+            write_demography_csv(out_dir / "pollution_dynamics.csv", dynamics_rows)
+            written.append(out_dir / "pollution_dynamics.csv")
+
+    if not args.no_html:
+        for language in _demography_languages(args):
+            compact_report = build_html_report(
+                game_root=game_root,
+                constants=constants,
+                scenarios=scenarios,
+                rates_rows=rates_rows,
+                projection_rows=projection_rows,
+                growth_sensitivity_rows=growth_sensitivity_rows,
+                sensitivity_rows=sensitivity_rows,
+                source_summary=source_summary,
+                pollution_examples=pollution_examples,
+                pollution_dynamics_rows=dynamics_rows,
+                projection_initial_ratio=projection_initial_ratio,
+                projection_target_ratio=projection_target_ratio,
+                projection_sol=args.projection_sol,
+                language=language,
+                compact=True,
+            )
+            analysis_report = build_analysis_report(
+                game_root=game_root,
+                constants=constants,
+                scenarios=scenarios,
+                rates_rows=rates_rows,
+                projection_rows=projection_rows,
+                growth_sensitivity_rows=growth_sensitivity_rows,
+                sensitivity_rows=sensitivity_rows,
+                source_summary=source_summary,
+                pollution_examples=pollution_examples,
+                projection_initial_ratio=projection_initial_ratio,
+                projection_target_ratio=projection_target_ratio,
+                projection_sol=args.projection_sol,
+                language=language,
+            )
+            compact_path = out_dir / f"demography_report_{language}.html"
+            analysis_path = out_dir / f"demography_analysis_report_{language}.html"
+            compact_path.write_text(compact_report, encoding="utf-8")
+            analysis_path.write_text(analysis_report, encoding="utf-8")
+            written += [compact_path, analysis_path]
+
+        duplicate_generic = out_dir / "demography_report.html"
+        if duplicate_generic.exists():
+            duplicate_generic.unlink()
+
+    for path in written:
+        log.info("Wrote %s", path)
+    return 0
+
+
 def cmd_config(args: argparse.Namespace) -> int:
     """Manage the cached game-root path (`<V3_EMA>/.game_root`)."""
     if args.show:
@@ -444,6 +666,65 @@ def main(argv: list[str] | None = None) -> int:
     p_rd.add_argument("--eps-abs", type=float, default=0.01)
     p_rd.add_argument("--eps-rel", type=float, default=0.005)
     p_rd.set_defaults(func=cmd_regions_diff)
+
+    # ---- demography namespace (nested subcommands) ----
+    p_demo = sub.add_parser(
+        "demography",
+        help="Pop-growth and workforce-ratio analysis (HTML reports + CSV data)",
+    )
+    demo_sub = p_demo.add_subparsers(dest="demo_cmd", required=True)
+
+    p_dr = demo_sub.add_parser(
+        "report",
+        help="Build the HTML/CSV demography report under out/demography/",
+    )
+    p_dr.add_argument(
+        "--game-root", type=Path, default=None,
+        help="Victoria 3 install root (auto-detected by default; see `config`).",
+    )
+    p_dr.add_argument(
+        "--lang", default="simp_chinese",
+        help="(Game-data localization language; unused by the demography reader, "
+             "only affects UI-language inference when --ui-lang=auto.)",
+    )
+    p_dr.add_argument(
+        "--ui-lang", choices=["zh", "en", "both", "auto"], default="both",
+        help="HTML report language. 'both' (default) emits both en and zh "
+             "compact + analysis HTMLs.",
+    )
+    p_dr.add_argument(
+        "--out", type=Path, default=None,
+        help=f"Output directory. Default: {DEFAULT_DEMOGRAPHY_DIR}",
+    )
+    p_dr.add_argument("--sol-min", type=int, default=0, help="Minimum SoL to plot.")
+    p_dr.add_argument("--sol-max", type=int, default=35, help="Maximum SoL to plot.")
+    p_dr.add_argument("--months", type=int, default=1200,
+                      help="Months for workforce-ratio projection (default 1200 = 100 years).")
+    p_dr.add_argument("--projection-sol", type=float, default=15.0,
+                      help="SoL used for workforce-ratio projection (default 15).")
+    p_dr.add_argument("--initial-workforce-ratio", type=float, default=None,
+                      help="Initial workforce ratio. Default: WORKING_ADULT_RATIO_BASE from defines.")
+    p_dr.add_argument("--projection-target", type=float, default=None,
+                      help="Target workforce ratio. Default: base + 0.25 (suffrage + trade unions).")
+    p_dr.add_argument("--population", type=float, default=1_000_000.0,
+                      help="Initial population for projection (default 1e6).")
+    p_dr.add_argument("--no-skew", action="store_true",
+                      help="Disable WORKING_ADULT_RATIO_SKEW_MAXIMUM mortality skew (legacy uniform model).")
+    p_dr.add_argument("--sol-start", type=float, default=None,
+                      help="Starting SoL for a linear-trajectory projection (requires --sol-end).")
+    p_dr.add_argument("--sol-end", type=float, default=None,
+                      help="Ending SoL for a linear-trajectory projection (requires --sol-start).")
+    p_dr.add_argument("--pollution-dynamics-months", type=int, default=240,
+                      help="Length of the transient pollution simulation (default 240; 0 to skip).")
+    p_dr.add_argument("--skip-modifier-scan", action="store_true",
+                      help="Skip the slow recursive scan of game/common/*.txt for modifier sources.")
+    p_dr.add_argument("--bar-chart-top-n", type=int, default=12,
+                      help="Number of bars in the modifier-frequency chart (default 12).")
+    p_dr.add_argument("--scenarios-from", choices=("game", "hardcoded"), default="game",
+                      help="Source for scenario modifier values (default: 'game' parses live).")
+    p_dr.add_argument("--no-html", action="store_true", help="Skip HTML output (CSVs only).")
+    p_dr.add_argument("--no-csv", action="store_true", help="Skip CSV output (HTMLs only).")
+    p_dr.set_defaults(func=cmd_demography_report)
 
     args = p.parse_args(argv)
     return args.func(args)

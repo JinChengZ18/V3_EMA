@@ -115,6 +115,47 @@ python -m v3_ema regions report --lang braz_por  --out regions_bp.xlsx
 
 报表按 14 个大洲分桶（西欧 / 南欧 / 北欧 / 东欧 / 北美 / 中美 / 南美 / 非洲 / 中东 / 中亚 / 印度 / 东亚 / 东南亚 / 大洋洲）。**首行是合计**（该桶内全部地区资源总和）。每行核心字段：地区 / 战略大区 / 可耕地 / 可耕作建筑 / 上限总和 / **每种资源的单项列**（铁矿/煤矿/林业营地/油田 等，方便排序对比）/ 总产能容量 / 地区特性。
 
+### 功能 3：人口与劳动力比例分析
+
+```powershell
+# 生成中英双语 HTML 报告 + CSV 原始数据（默认）
+python -m v3_ema demography report
+
+# 只出英文
+python -m v3_ema demography report --ui-lang en
+# 只出中文
+python -m v3_ema demography report --ui-lang zh
+
+# 自定义投影窗口（默认 100 年、SoL 15、25% → 50% 劳动力比例）
+python -m v3_ema demography report --months 600 --projection-sol 12 \
+    --initial-workforce-ratio 0.20 --projection-target 0.45
+
+# 让 SoL 在 100 年里从 8 线性涨到 14
+python -m v3_ema demography report --sol-start 8 --sol-end 14
+
+# 跳过对 game/common 的全量扫描（更快，但会丢失 modifier_sources.csv 与图表里的修正频次）
+python -m v3_ema demography report --skip-modifier-scan
+
+# 关闭 WORKING_ADULT_RATIO_SKEW_MAXIMUM 偏移模型，回到旧的均匀死亡分摊
+python -m v3_ema demography report --no-skew
+```
+
+输出位置：`V3_EMA\out\demography\`。
+
+每次运行产出（默认 `--ui-lang both`）：
+
+- `demography_report_{en,zh}.html` — 紧凑图表 + 数据报告
+- `demography_analysis_report_{en,zh}.html` — 学术风格分析报告（含基础曲线、敏感性、医疗对比、量化局限性）
+- `rates_by_sol.csv` — 按 SoL × 场景的出生率/死亡率/自然增长
+- `net_growth_sensitivity.csv` — 按因素分组的自然增长敏感性
+- `workforce_projection.csv` — 各场景 100 年劳动力比例与人口曲线
+- `workforce_sensitivity.csv` — 各因素隔离投影
+- `modifier_sources.csv` / `modifier_source_summary.csv` — 全 `game/common` 的相关修正扫描
+- `pollution_impact_examples.csv` — 污染生成 → impact 的稳态对照
+- `pollution_dynamics.csv` — 污染瞬态月度演化
+
+报告基于游戏 `defines/00_defines.txt` 中的人口曲线、`laws/00_health_system.txt` 的医疗法律、`laws/00_rights_of_women.txt` 的女权法律、`static_modifiers/00_code_static_modifiers.txt` 的识字率与饥荒静态修正等。法律 / 医疗 / 饥荒数值默认从 `game/common` 实时解析（`--scenarios-from game`），过期的硬编码值会被自动覆盖；`--scenarios-from hardcoded` 退回到 `v3_ema/demography/scenarios.py` 内的常量。
+
 ### 工具命令
 
 ```powershell
