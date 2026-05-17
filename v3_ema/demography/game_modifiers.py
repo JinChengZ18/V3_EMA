@@ -146,12 +146,14 @@ def build_sensitivity_scenarios_from_game(
             "Public health",
             mortality_mult=_g(public, "state_mortality_mult", -0.05),
             pollution_health_reduction_mult=_g(public, "state_pollution_reduction_health_mult", -0.15),
+            sol_add=_g(public, "state_standard_of_living_add", 0.5),
         )
         groups["healthcare_pollution"] = _replace_by_name(
             groups["healthcare_pollution"],
             "Public health + pollution 50%",
             mortality_mult=_g(public, "state_mortality_mult", -0.05),
             pollution_health_reduction_mult=_g(public, "state_pollution_reduction_health_mult", -0.15),
+            sol_add=_g(public, "state_standard_of_living_add", 0.5),
         )
     if private:
         groups["healthcare"] = _replace_by_name(

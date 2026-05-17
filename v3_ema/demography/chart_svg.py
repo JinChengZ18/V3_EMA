@@ -134,18 +134,19 @@ def svg_line_chart(
     style_keys: list[str | None] | None = None,
     series_colors: list[str | None] | None = None,
     series_dashes: list[str | None] | None = None,
+    x_ticks: list[float] | None = None,
+    annotations: list[dict] | None = None,
 ) -> str:
     """Render an SVG line chart.
 
-    ``style_keys`` (optional) is a list parallel to ``series`` giving each
-    series an explicit style category (``"base"``, ``"birth"``, ``"mortality"``,
-    ``"natural_growth"``, or ``None`` for the palette).
+    ``style_keys`` / ``series_colors`` / ``series_dashes`` (all optional,
+    parallel to ``series``) let callers control the line style per series.
 
-    ``series_colors`` / ``series_dashes`` (optional, parallel to ``series``)
-    let callers override the auto-assigned color and dash pattern for any
-    series — used for the healthcare comparison chart where the four
-    health-system curves need a consistent color across the two pollution
-    levels, with the 50% pollution variant rendered dashed.
+    ``x_ticks`` (optional) explicit x-axis tick values. When omitted, falls
+    back to 6 evenly-spaced ticks across the data range.
+
+    ``annotations`` (optional) marks key points with a vertical dashed line
+    and a label. Each entry: ``{"x": float, "label": str, "color": str?}``.
     """
     if style_keys is None:
         style_keys = [None] * len(series)
@@ -153,6 +154,8 @@ def svg_line_chart(
         series_colors = [None] * len(series)
     if series_dashes is None:
         series_dashes = [None] * len(series)
+    if annotations is None:
+        annotations = []
     max_label_chars = max((display_units(name) for name, _ in series), default=0)
     left = 78
     right = max(190, min(420, 86 + max_label_chars * 7))
@@ -200,8 +203,11 @@ def svg_line_chart(
         f'<line x1="{left}" y1="{top + plot_h}" x2="{left + plot_w}" y2="{top + plot_h}" class="axis"/>',
         f'<line x1="{left}" y1="{top}" x2="{left}" y2="{top + plot_h}" class="axis"/>',
     ]
-    for i in range(6):
-        x = x_min + (x_max - x_min) * i / 5
+    if x_ticks is not None:
+        shown_x_ticks = [t for t in x_ticks if x_min - 1e-9 <= t <= x_max + 1e-9]
+    else:
+        shown_x_ticks = [x_min + (x_max - x_min) * i / 5 for i in range(6)]
+    for x in shown_x_ticks:
         px = sx(x)
         parts.append(f'<line x1="{px:.1f}" y1="{top}" x2="{px:.1f}" y2="{top + plot_h}" class="grid"/>')
         parts.append(f'<text x="{px:.1f}" y="{top + plot_h + 22}" class="tick" text-anchor="middle">{x:g}</text>')
@@ -240,6 +246,24 @@ def svg_line_chart(
         dash_attr = f' stroke-dasharray="{dash}"' if dash else ""
         coords = " ".join(f"{sx(x):.1f},{sy(y):.1f}" for x, y in points)
         parts.append(f'<polyline points="{coords}" fill="none" stroke="{color}" stroke-width="{style["width"]}" opacity="{style["opacity"]}" stroke-linecap="round" stroke-linejoin="round"{dash_attr}/>')
+    # Annotations: vertical dashed line + label at key x values.
+    for ann in annotations:
+        ax = float(ann["x"])
+        if ax < x_min - 1e-9 or ax > x_max + 1e-9:
+            continue
+        apx = sx(ax)
+        acolor = ann.get("color", "#0f172a")
+        label = str(ann.get("label", ""))
+        parts.append(
+            f'<line x1="{apx:.1f}" y1="{top}" x2="{apx:.1f}" y2="{top + plot_h}" '
+            f'stroke="{acolor}" stroke-width="1.2" stroke-dasharray="3 4" opacity="0.6"/>'
+        )
+        if label:
+            parts.append(
+                f'<text x="{apx + 3:.1f}" y="{top + 12}" class="legend" '
+                f'fill="{acolor}" font-weight="600">{html.escape(label)}</text>'
+            )
+
     for idx, (name, _points) in enumerate(series):
         style = series_style(name, idx, len(series), palette, style_key=style_keys[idx])
         color = series_colors[idx] if series_colors[idx] else str(style["color"])

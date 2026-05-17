@@ -80,6 +80,7 @@ def _healthcare_scenarios(constants: PopGrowthConstants, *, pollution: float) ->
             "Public health",
             mortality_mult=-0.05,
             pollution_health_reduction_mult=-0.15,
+            sol_add=0.5,
             target_workforce_ratio=base,
             pollution_impact=pollution,
         ),
@@ -232,6 +233,126 @@ def time_to_target_ratio(
         if row["workforce_ratio"] >= target_ratio_check:
             return row["year"]
     return None
+
+
+def workforce_skew_comparison(
+    constants: PopGrowthConstants,
+    *,
+    sol: float = 12.0,
+    initial_ratio: float = 0.25,
+    target_ratio: float = 0.50,
+    months: int = 1200,
+) -> dict[str, object]:
+    """Time-to-40% with and without the WORKING_ADULT_RATIO_SKEW_MAXIMUM
+    correction. The without case ("legacy uniform") allocates deaths
+    proportionally to current population shares; the with case allocates
+    deaths toward whichever cohort is over-represented relative to target.
+    """
+    s = Scenario(
+        "_skew_test",
+        initial_workforce_ratio=initial_ratio,
+        target_workforce_ratio=target_ratio,
+    )
+    with_skew = project_workforce_ratio(
+        s, constants, sol=sol, months=months, population=1_000_000.0, use_skew=True,
+    )
+    without_skew = project_workforce_ratio(
+        s, constants, sol=sol, months=months, population=1_000_000.0, use_skew=False,
+    )
+
+    def years_to(rows: list[dict], threshold: float) -> float | None:
+        for row in rows:
+            if row["workforce_ratio"] >= threshold:
+                return row["year"]
+        return None
+
+    return {
+        "with_skew_years_to_40": years_to(with_skew, 0.40),
+        "without_skew_years_to_40": years_to(without_skew, 0.40),
+        "with_skew_years_to_45": years_to(with_skew, 0.45),
+        "without_skew_years_to_45": years_to(without_skew, 0.45),
+        "with_skew_ratio_50y": with_skew[599]["workforce_ratio"] if len(with_skew) > 599 else with_skew[-1]["workforce_ratio"],
+        "without_skew_ratio_50y": without_skew[599]["workforce_ratio"] if len(without_skew) > 599 else without_skew[-1]["workforce_ratio"],
+    }
+
+
+def workforce_initial_ratio_table(
+    constants: PopGrowthConstants,
+    *,
+    sol: float = 12.0,
+    target_ratio: float = 0.50,
+    birth_mult: float = 0.0,
+    initial_ratios: tuple[float, ...] = (0.15, 0.20, 0.25, 0.30, 0.35),
+    months: int = 1200,
+) -> list[dict[str, object]]:
+    """Time-to-40 / time-to-45 / ratio after 50 years, varying the starting
+    workforce ratio with the full law stack (target=50%) at SoL ``sol``.
+    """
+    rows: list[dict[str, object]] = []
+    for r0 in initial_ratios:
+        s = Scenario(
+            f"init_{int(r0*100)}",
+            birth_mult=birth_mult,
+            initial_workforce_ratio=r0,
+            target_workforce_ratio=target_ratio,
+        )
+        result = project_workforce_ratio(
+            s, constants, sol=sol, months=months, population=1_000_000.0,
+        )
+
+        def years_to(threshold: float, rows_ref=result) -> float | None:
+            for row in rows_ref:
+                if row["workforce_ratio"] >= threshold:
+                    return row["year"]
+            return None
+
+        rows.append({
+            "initial_ratio": r0,
+            "years_to_40pct": years_to(0.40),
+            "years_to_45pct": years_to(0.45),
+            "ratio_after_50y": result[599]["workforce_ratio"] if len(result) > 599 else result[-1]["workforce_ratio"],
+            "ratio_after_100y": result[-1]["workforce_ratio"],
+        })
+    return rows
+
+
+def workforce_birth_mod_table(
+    constants: PopGrowthConstants,
+    *,
+    sol: float = 12.0,
+    target_ratio: float = 0.50,
+    initial_ratio: float = 0.25,
+    birth_mods: tuple[float, ...] = (-0.10, -0.05, 0.0, 0.05, 0.10),
+    months: int = 1200,
+) -> list[dict[str, object]]:
+    """Time-to-target sweep across birth-rate modifier values, with target
+    pinned at 50% so the effect of birth-rate-only changes is isolated.
+    """
+    rows: list[dict[str, object]] = []
+    for bm in birth_mods:
+        s = Scenario(
+            f"birth_{int(bm*100):+d}pp",
+            birth_mult=bm,
+            initial_workforce_ratio=initial_ratio,
+            target_workforce_ratio=target_ratio,
+        )
+        result = project_workforce_ratio(
+            s, constants, sol=sol, months=months, population=1_000_000.0,
+        )
+
+        def years_to(threshold: float, rows_ref=result) -> float | None:
+            for row in rows_ref:
+                if row["workforce_ratio"] >= threshold:
+                    return row["year"]
+            return None
+
+        rows.append({
+            "birth_mult": bm,
+            "years_to_40pct": years_to(0.40),
+            "years_to_45pct": years_to(0.45),
+            "ratio_after_50y": result[599]["workforce_ratio"] if len(result) > 599 else result[-1]["workforce_ratio"],
+        })
+    return rows
 
 
 def workforce_ratio_lever_table(

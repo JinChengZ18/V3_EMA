@@ -23,6 +23,10 @@ class Scenario:
     target_workforce_ratio: float = 0.25
     initial_workforce_ratio: float = 0.25
     projection_sol: float | None = None
+    # Flat SoL bonus from the scenario itself (e.g. Public Health applies
+    # state_standard_of_living_add = +0.5). Added BEFORE the pollution-driven
+    # SoL penalty so it raises the effective SoL plugged into birth/mortality.
+    sol_add: float = 0.0
     notes: str = ""
 
 
@@ -130,7 +134,10 @@ def adjusted_rates(sol: float, scenario: Scenario, constants: PopGrowthConstants
     # the same scaling. (See README "Model notes" for the assumption.)
     pollution_health_factor = max(0.0, 1.0 + scenario.pollution_health_reduction_mult)
     pollution_sol_penalty = -3.0 * pollution_impact * pollution_health_factor
-    effective_sol = max(0.0, sol + pollution_sol_penalty)
+    # Scenario-level flat SoL adds (e.g. Public Health's
+    # state_standard_of_living_add = +0.5) raise the effective SoL plugged
+    # into birth/mortality before the pollution penalty is applied.
+    effective_sol = max(0.0, sol + scenario.sol_add + pollution_sol_penalty)
 
     birth_base = base_birth_rate(effective_sol, constants)
     mortality_base = base_mortality(effective_sol, constants)

@@ -21,7 +21,10 @@ from .experiments import (
     private_vs_public_breakeven_sol,
     starvation_recovery_curve,
     starvation_summary,
+    workforce_birth_mod_table,
+    workforce_initial_ratio_table,
     workforce_ratio_lever_table,
+    workforce_skew_comparison,
 )
 from .i18n import (
     DATA_DICTIONARY,
@@ -409,6 +412,31 @@ def build_html_report(
     def palette_for(group_key: str) -> str:
         return sensitivity_palette_map.get(group_key, "categorical")
 
+    # Key SoL break-points to annotate on every SoL-axis chart.
+    if language == "zh":
+        base_annotations = [
+            {"x": float(constants.equilibrium_sol), "label": f"SoL {int(constants.equilibrium_sol)}：净增长 = 0"},
+            {"x": float(constants.transition_sol), "label": f"SoL {int(constants.transition_sol)}：出生率开始下降"},
+            {"x": float(constants.growth_max_sol), "label": f"SoL {int(constants.growth_max_sol)}：净增长峰值"},
+            {"x": float(constants.stable_sol), "label": f"SoL {int(constants.stable_sol)}：曲线触底"},
+        ]
+        net_annotations = [
+            {"x": float(constants.equilibrium_sol), "label": f"SoL {int(constants.equilibrium_sol)}：增长为零"},
+            {"x": float(constants.growth_max_sol), "label": f"SoL {int(constants.growth_max_sol)}：增长峰值"},
+        ]
+    else:
+        base_annotations = [
+            {"x": float(constants.equilibrium_sol), "label": f"SoL {int(constants.equilibrium_sol)}: net = 0"},
+            {"x": float(constants.transition_sol), "label": f"SoL {int(constants.transition_sol)}: birth declines"},
+            {"x": float(constants.growth_max_sol), "label": f"SoL {int(constants.growth_max_sol)}: net peak"},
+            {"x": float(constants.stable_sol), "label": f"SoL {int(constants.stable_sol)}: floors"},
+        ]
+        net_annotations = [
+            {"x": float(constants.equilibrium_sol), "label": f"SoL {int(constants.equilibrium_sol)}: zero crossing"},
+            {"x": float(constants.growth_max_sol), "label": f"SoL {int(constants.growth_max_sol)}: peak"},
+        ]
+    sol_xticks = [0, 5, 10, 15, 20, 25, 30, 35]
+
     net_sensitivity_sections = []
     for group_key in NET_SENSITIVITY_GROUP_KEYS:
         group_rows = [row for row in growth_sensitivity_rows if row["factor_group"] == group_key]
@@ -419,9 +447,9 @@ def build_html_report(
         note_html = "" if compact else f'<p class="small">{html.escape(note)}</p>'
         net_sensitivity_sections.append(
             f"""
-<h3>{html.escape(title)}</h3>
+<h3 id="net-{group_key}">{html.escape(title)}</h3>
 {note_html}
-{svg_line_chart(title, net_growth_series_from_rows(group_rows, language), x_label=text["sol_axis"], y_label=text["net_axis"], y_scale="symlog", integer_percent_y_ticks=True, zero_baseline=True, palette=palette_for(group_key))}
+{svg_line_chart(title, net_growth_series_from_rows(group_rows, language), x_label=text["sol_axis"], y_label=text["net_axis"], y_scale="symlog", integer_percent_y_ticks=True, zero_baseline=True, palette=palette_for(group_key), x_ticks=sol_xticks, annotations=net_annotations)}
 """
         )
     net_sensitivity_html = "\n".join(net_sensitivity_sections)
@@ -446,7 +474,7 @@ def build_html_report(
             )
         sensitivity_sections.append(
             f"""
-<h3>{html.escape(title)}</h3>
+<h3 id="wf-{group_key}">{html.escape(title)}</h3>
 {note_html}
 {svg_workforce_chart(title, projection_series_from_rows(group_rows, language), x_label=text["years_axis"], y_label=text["workforce_axis"], palette=palette_for(group_key), bounds=workforce_bounds)}
 {population_chart}
@@ -479,29 +507,29 @@ def build_html_report(
 <h2>{html.escape(text['formula_title'])}</h2>
 <div class="card">{formula_block(constants, language)}</div>
 
-<h2>{html.escape(text['section_base_charts'])}</h2>
-{svg_line_chart(text["base_chart"], localized_series(base_series, language), x_label=text["sol_axis"], y_label=text["rate_axis"], zero_baseline=True, style_keys=BASE_SERIES_STYLE_KEYS)}
+<h2 id="section-base">{html.escape(text['section_base_charts'])}</h2>
+{svg_line_chart(text["base_chart"], localized_series(base_series, language), x_label=text["sol_axis"], y_label=text["rate_axis"], zero_baseline=True, style_keys=BASE_SERIES_STYLE_KEYS, x_ticks=sol_xticks, annotations=base_annotations)}
 
-<h2>{html.escape(text['section_scenarios_table'])}</h2>
+<h2 id="section-scenarios">{html.escape(text['section_scenarios_table'])}</h2>
 {scenario_inputs_table}
 
-<h2>{html.escape(text['section_net_charts'])}</h2>
-{svg_line_chart(text["net_chart"], localized_series(net_series, language), x_label=text["sol_axis"], y_label=text["net_axis"], y_scale="symlog", integer_percent_y_ticks=True, zero_baseline=True)}
+<h2 id="section-net">{html.escape(text['section_net_charts'])}</h2>
+{svg_line_chart(text["net_chart"], localized_series(net_series, language), x_label=text["sol_axis"], y_label=text["net_axis"], y_scale="symlog", integer_percent_y_ticks=True, zero_baseline=True, x_ticks=sol_xticks, annotations=net_annotations)}
 {net_sensitivity_html}
 
-<h2>{html.escape(text['section_workforce_charts'])}</h2>
+<h2 id="section-workforce">{html.escape(text['section_workforce_charts'])}</h2>
 {svg_workforce_chart(text["workforce_chart"], projection_series, x_label=text["years_axis"], y_label=text["workforce_axis"], bounds=workforce_bounds)}
 {sensitivity_html}
 
-<h2>{html.escape(text['section_pollution_charts'])}</h2>
+<h2 id="section-pollution">{html.escape(text['section_pollution_charts'])}</h2>
 {pollution_steady_table_html}
 {_render_pollution_dynamics_chart(pollution_dynamics_rows or [], text)}
 
-<h2>{html.escape(text['section_modifier_section'])}</h2>
+<h2 id="section-modifiers">{html.escape(text['section_modifier_section'])}</h2>
 {svg_bar_chart(text["source_chart"], source_summary, key_field="key", value_field="count")}
 {modifier_summary_table}
 
-<h2>{html.escape(text['section_dict'])}</h2>
+<h2 id="section-dict">{html.escape(text['section_dict'])}</h2>
 {data_dict_html}
 </main>
 </body>
@@ -647,6 +675,50 @@ def _render_lever_table(
         f"<td>{_fmt_years(r['years_to_45pct'])}</td>"
         f"<td>{pct(float(r['ratio_after_50y']), 1)}</td>"
         f"<td>{pct(float(r['ratio_after_100y']), 1)}</td>"
+        "</tr>"
+        for r in rows
+    )
+    return f"<table><thead>{headers}</thead><tbody>{body}</tbody></table>"
+
+
+def _render_initial_ratio_table(
+    rows: list[dict[str, object]], text: dict
+) -> str:
+    headers = (
+        f"<tr><th>{html.escape(text['col_initial_ratio'])}</th>"
+        f"<th>{html.escape(text['col_years_to_40'])}</th>"
+        f"<th>{html.escape(text['col_years_to_45'])}</th>"
+        f"<th>{html.escape(text['col_ratio_at_50y'])}</th>"
+        f"<th>{html.escape(text['col_ratio_at_100y'])}</th></tr>"
+    )
+    body = "\n".join(
+        "<tr>"
+        f"<td>{pct(float(r['initial_ratio']), 0)}</td>"
+        f"<td>{_fmt_years(r['years_to_40pct'])}</td>"
+        f"<td>{_fmt_years(r['years_to_45pct'])}</td>"
+        f"<td>{pct(float(r['ratio_after_50y']), 1)}</td>"
+        f"<td>{pct(float(r['ratio_after_100y']), 1)}</td>"
+        "</tr>"
+        for r in rows
+    )
+    return f"<table><thead>{headers}</thead><tbody>{body}</tbody></table>"
+
+
+def _render_birth_mod_table(
+    rows: list[dict[str, object]], text: dict
+) -> str:
+    headers = (
+        f"<tr><th>{html.escape(text['col_birth_mod'])}</th>"
+        f"<th>{html.escape(text['col_years_to_40'])}</th>"
+        f"<th>{html.escape(text['col_years_to_45'])}</th>"
+        f"<th>{html.escape(text['col_ratio_at_50y'])}</th></tr>"
+    )
+    body = "\n".join(
+        "<tr>"
+        f"<td>{pct(float(r['birth_mult']), 0)}</td>"
+        f"<td>{_fmt_years(r['years_to_40pct'])}</td>"
+        f"<td>{_fmt_years(r['years_to_45pct'])}</td>"
+        f"<td>{pct(float(r['ratio_after_50y']), 1)}</td>"
         "</tr>"
         for r in rows
     )
@@ -861,6 +933,27 @@ def build_analysis_report(
     birth_sol12_annual = base_birth_rate(12.0, constants) * 12.0
     birth_sol15_annual = base_birth_rate(15.0, constants) * 12.0
 
+    # Extended workforce-ratio analyses.
+    skew_result = workforce_skew_comparison(
+        constants, sol=12.0, initial_ratio=0.25, target_ratio=0.50,
+    )
+    initial_ratio_rows = workforce_initial_ratio_table(
+        constants, sol=12.0, target_ratio=0.50, birth_mult=0.0,
+        initial_ratios=(0.15, 0.20, 0.25, 0.30, 0.35),
+    )
+    birth_mod_rows = workforce_birth_mod_table(
+        constants, sol=12.0, target_ratio=0.50, initial_ratio=0.25,
+        birth_mods=(-0.10, -0.05, 0.0, 0.05, 0.10),
+    )
+    initial_ratio_table_html = _render_initial_ratio_table(initial_ratio_rows, text)
+    birth_mod_table_html = _render_birth_mod_table(birth_mod_rows, text)
+
+    ratio_skew_para = text["ratio_skew_para"].format(
+        skew_on_40=_fmt_years(skew_result["with_skew_years_to_40"]),
+        skew_off_40=_fmt_years(skew_result["without_skew_years_to_40"]),
+        skew_diff_40=f"{(float(skew_result['with_skew_ratio_50y']) - float(skew_result['without_skew_ratio_50y'])) * 100:.2f}",
+    )
+
     # ---- Industrial cost ----
     industrial_rows = industrial_vs_agrarian_table(
         constants, sol=14.0, years=80,
@@ -905,6 +998,9 @@ def build_analysis_report(
         mult_15=f"{float(food_row_15['population_multiplier_after_years']):.2f}×",
         mult_10=f"{float(food_row_10['population_multiplier_after_years']):.2f}×",
         mult_5=f"{float(food_row_5['population_multiplier_after_years']):.2f}×",
+    )
+    food_data_ref = text["food_data_ref"].format(
+        delta_15=pct(float(food_row_15["net_growth_delta"]), 2),
     )
     ratio_body_p3 = text["ratio_body_p3"].format(
         years_sol12=years_sol12,
@@ -955,10 +1051,12 @@ def build_analysis_report(
 <p>{health_body_p2}</p>
 <p>{text['health_body_p3']}</p>
 {health_chart}
+<p>{text['health_data_ref']}</p>
 
 <h2>{html.escape(text['food_title'])}</h2>
 <p>{food_body_p1}</p>
 {food_chart}
+<p>{food_data_ref}</p>
 
 <h2>{html.escape(text['ratio_title'])}</h2>
 <p>{text['ratio_body_p1']}</p>
@@ -966,11 +1064,22 @@ def build_analysis_report(
 <p>{ratio_body_p3}</p>
 {lever_table_html}
 <p>{text['ratio_body_p4']}</p>
+<p>{ratio_skew_para}</p>
+<p>{text['ratio_initial_para']}</p>
+{initial_ratio_table_html}
+<p>{text['ratio_initial_after']}</p>
+<p>{text['ratio_birth_para']}</p>
+{birth_mod_table_html}
+<p>{text['ratio_birth_after']}</p>
+<p>{text['ratio_data_ref_p1']}</p>
+<p>{text['ratio_data_ref_p2']}</p>
+<p>{text['ratio_data_ref_p3']}</p>
 
 <h2>{html.escape(text['industry_title'])}</h2>
 <p>{text['industry_body_p1']}</p>
 {industrial_table_html}
 <p>{industry_body_p2}</p>
+<p>{text['industry_data_ref']}</p>
 
 <h2>{html.escape(text['famine_title'])}</h2>
 <p>{famine_body_p1}</p>
@@ -980,6 +1089,7 @@ def build_analysis_report(
 <h2>{html.escape(text['literacy_title'])}</h2>
 <p>{literacy_body_p1}</p>
 <p>{text['literacy_body_p2']}</p>
+<p>{text['literacy_data_ref']}</p>
 
 <h2>{html.escape(text['figures_pointer_title'])}</h2>
 <p>{text['figures_pointer_body']}</p>

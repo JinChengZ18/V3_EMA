@@ -71,11 +71,11 @@ NOTE_TRANSLATIONS_ZH = {
     "Private health, wealth 20": "私人医保：state_mortality_wealth_mult = -0.002，按财富点数缩放。",
     "No health system": "医疗制度控制组。",
     "Charitable health": "慈善医院：死亡率 -3%，污染健康影响减少 10%。",
-    "Public health": "公立医疗：死亡率 -5%，污染健康影响减少 15%。",
-    "Private health (wealth from SoL)": "私立医疗：state_mortality_wealth_mult = -0.002，按由 SoL 线性映射的代理 wealth 缩放。",
+    "Public health": "公共医保：死亡率 -5%，污染健康影响减少 15%。",
+    "Private health (wealth from SoL)": "私立医疗：state_mortality_wealth_mult = -0.002，按由 SoL 线性映射的代理财富缩放。",
     "No health + pollution 50%": "固定污染影响 50% 的医疗制度控制组。",
     "Charitable health + pollution 50%": "固定污染影响 50%，慈善医院减少污染健康影响。",
-    "Public health + pollution 50%": "固定污染影响 50%，公立医疗减少污染健康影响。",
+    "Public health + pollution 50%": "固定污染影响 50%，公共医保减少污染健康影响。",
     "Private health + pollution 50%": "固定污染影响 50%，私立医疗按 SoL 代理财富并减少污染健康影响。",
     "Starvation (partial)": "starvation_penalty：满强度时出生率 -70%、死亡率 +60%（引擎按 Starvation 缩放，约 50% 强度封顶，典型效果 ≈ -35%/+30%）。",
     "Severe starvation": "severe_starvation_penalty：出生率 -90%，死亡率 +100%。",
@@ -303,7 +303,7 @@ DATA_DICTIONARY = [
             ("pollution_sol_penalty", "−3 × impact × (1+reduction): the SoL drop driving effective_sol.", "−3 × impact × (1+reduction)：导致 effective_sol 下降的 SoL 惩罚。"),
             ("pollution_mortality_mult", "0.5 × impact × (1+reduction): pollution's mortality contribution.", "0.5 × impact × (1+reduction)：污染对死亡率乘数的贡献。"),
             ("wealth_mortality_mult", "state_mortality_wealth_mult × wealth_used. Private-health channel.", "state_mortality_wealth_mult × wealth_used。私立医疗通道。"),
-            ("wealth_used", "Wealth value plugged into wealth_mortality_mult (sol_to_wealth(SoL) when wealth_from_sol).", "代入 wealth_mortality_mult 的 wealth 值（wealth_from_sol 时为 sol_to_wealth(SoL)）。"),
+            ("wealth_used", "Wealth value plugged into wealth_mortality_mult (sol_to_wealth(SoL) when wealth_from_sol).", "代入 wealth_mortality_mult 的财富值（wealth_from_sol 时为 sol_to_wealth(SoL)）。"),
             ("turmoil_mortality_mult", "state_mortality_turmoil_mult × turmoil. Always 0 in default scenarios.", "state_mortality_turmoil_mult × 动乱值。默认场景中恒为 0。"),
             ("birth_monthly", "Final monthly birth rate after all multipliers, clamped to ≥0.", "经全部乘数后的最终月出生率，下限 0。"),
             ("mortality_monthly", "Final monthly mortality after all multipliers, clamped to ≥0.", "经全部乘数后的最终月死亡率，下限 0。"),
@@ -317,7 +317,7 @@ DATA_DICTIONARY = [
         "net_growth_sensitivity.csv",
         [
             ("factor_group", "Sensitivity group: birth_multiplier / mortality_multiplier / literacy / pollution / healthcare / healthcare_pollution.", "敏感性分组：出生率 / 死亡率 / 识字 / 污染 / 医疗 / 医疗+污染。"),
-            ("scenario", "Scenario name within the group (e.g. \"Public health\").", "组内场景名（如「公立医疗」）。"),
+            ("scenario", "Scenario name within the group (e.g. \"Public health\").", "组内场景名（如「公共医保」）。"),
             ("…", "Remaining columns identical to rates_by_sol.csv.", "其余列与 rates_by_sol.csv 一致。"),
         ],
     ),
@@ -395,7 +395,7 @@ HEALTH_SYSTEM_LABELS = {
     "zh": {
         "no_health": "无医疗制度",
         "charitable": "慈善医院",
-        "public": "公立医疗",
+        "public": "公共医保",
         "private": "私立医疗",
     },
 }
@@ -417,7 +417,7 @@ WORKFORCE_LEVER_LABELS = {
         "suffrage": "妇女选举（出生 −5%，目标 +15%）",
         "suffrage_unions": "选举 + 两层工会特质（每层 +5% 目标）",
         "food_only": "通用食品公司繁荣（出生 +5%，目标 50%）",
-        "high_sol": "反例：同样目标 50% 但 SoL 15（反而更慢！）",
+        "high_sol": "反例：同样目标 50% 但 SoL 15",
         "all_combined": "推荐：选举 + 工会 + 食品，SoL 12（出生抵消归零，目标 50%）",
     },
 }
@@ -457,7 +457,7 @@ ANALYSIS_TEXT = {
         "health_body_p2": (
             "Polluted contexts shift the picture. At 50% pollution impact, "
             "Public Health restores effective SoL by 0.75 versus Private's "
-            "0.45; the 5 pp pollution-reduction gap manifests as "
+            "0.45; the 5% pollution-reduction gap manifests as "
             "{public_mort_50_sol20} annual mortality under Public at SoL 20 "
             "compared to {private_mort_50_sol20} under Private. Private "
             "outperforms Public only when state pollution remains below 25% "
@@ -467,23 +467,44 @@ ANALYSIS_TEXT = {
         "health_body_p3": (
             "Charitable Health functions as a transitional option before "
             "pharmaceuticals research completes. Its −10% pollution reduction "
-            "is 5 pp behind Public's, and even Private outperforms it on raw "
+            "is 5% behind Public's, and even Private outperforms it on raw "
             "mortality. Once Public Health is researched, Charitable Health "
             "should be replaced."
+        ),
+        "health_data_ref": (
+            "The data report's <a href=\"demography_report_en.html#net-healthcare\">"
+            "net-growth healthcare sensitivity chart (0% pollution)</a> and "
+            "<a href=\"demography_report_en.html#net-healthcare_pollution\">"
+            "50%-pollution variant</a> plot the four systems on a common axis. "
+            "Without pollution, Public, Charitable, and Private nearly overlap "
+            "above SoL 16; under 50% pollution the curves separate across the "
+            "full SoL range, with Public above Private. The "
+            "<a href=\"demography_report_en.html#wf-healthcare\">workforce-ratio "
+            "sensitivity chart</a> shows the choice has little impact on the "
+            "ratio itself; the difference accumulates in total population."
         ),
 
         "food_title": "Food Company",
         "food_body_p1": (
             "The food company's prosperity modifier is a +5% birth-rate "
-            "multiplier, applied at the monthly tick once the company is "
-            "established and prosperous. Hundred-year compounded effects: at "
-            "SoL 15 the +{delta_15} annual-growth increment yields a final "
-            "state population of {mult_15} relative to the no-company "
-            "baseline. SoL 10, where base birth rate remains at its maximum, "
-            "sees a larger absolute gain and reaches {mult_10}. SoL 5 lies "
-            "near the natural-growth equilibrium, where lifting 0% net growth "
-            "to 0.27% produces the largest relative change; the multiplier "
-            "is also {mult_5}."
+            "multiplier, applied monthly once the company is prosperous. "
+            "Hundred-year compounded effects: at SoL 15 the +{delta_15} "
+            "annual-growth increment yields a state population of {mult_15} "
+            "relative to the no-company baseline. SoL 10, where base birth "
+            "rate is still at its maximum, sees a larger absolute gain and "
+            "reaches {mult_10}. SoL 5 is near the natural-growth equilibrium, "
+            "where lifting 0% to 0.27% net growth is the largest relative "
+            "change; the multiplier is also {mult_5}."
+        ),
+        "food_data_ref": (
+            "The data report's <a href=\"demography_report_en.html#net-birth_multiplier\">"
+            "net-growth birth-rate-multiplier sensitivity chart</a> sweeps "
+            "±10%. The +5% curve reads 2.69%/yr at SoL 15 versus the 2.50%/yr "
+            "baseline, a +{delta_15} difference. Past SoL 25 all curves "
+            "converge as base birth hits its floor. The "
+            "<a href=\"demography_report_en.html#wf-birth_multiplier\">workforce "
+            "sensitivity counterpart</a> shows the same +5% accelerates "
+            "convergence by about 4 years from a 25% start."
         ),
 
         "ratio_title": "Raising the Workforce Ratio",
@@ -491,8 +512,8 @@ ANALYSIS_TEXT = {
             "The long-run upper bound is the sum of the working-adult ratio "
             "additive modifiers from laws and traits: Women in the Workplace "
             "+10%, Women's Suffrage +15%, and two ranks of the Trade Unions "
-            "trait at +5% each, totalling +35% on the 25% base — an "
-            "asymptote of 50%. This asymptote is not exceeded in the model."
+            "trait at +5% each, totalling +35% on the 25% base — an asymptote "
+            "of 50% that the model cannot exceed."
         ),
         "ratio_body_p2": (
             "Convergence speed is driven by the birth rate. New pops are "
@@ -504,21 +525,47 @@ ANALYSIS_TEXT = {
             "roughly doubling effective convergence."
         ),
         "ratio_body_p3": (
-            "A non-obvious result: under the same law stack, raising the "
-            "ratio from 25% to 40% takes {years_sol12} years at SoL 12 but "
-            "{years_sol15} years at SoL 15. SoL 12's base birth rate "
-            "({birth_sol12}/yr) exceeds SoL 15's ({birth_sol15}/yr) by about "
-            "25%, and birth dominates convergence. Where workforce ratio is "
-            "the priority, SoL is best held in the 10–12 range rather than "
-            "pushed higher."
+            "Under the same law stack, raising the ratio from 25% to 40% takes "
+            "{years_sol12} years at SoL 12 but {years_sol15} years at SoL 15. "
+            "SoL 12's base birth rate ({birth_sol12}/yr) exceeds SoL 15's "
+            "({birth_sol15}/yr) by about 25%, and birth dominates convergence. "
+            "Where workforce ratio is the priority, SoL is best held in the "
+            "10–12 range."
         ),
         "ratio_body_p4": (
-            "The food company integrates cleanly with the suffrage path: its "
-            "+5% birth multiplier cancels the suffrage law's −5% birth "
-            "penalty, leaving the birth channel net zero while the target "
-            "continues to rise. Mortality multipliers exert minimal influence "
-            "on the ratio itself (numerator and denominator move together); "
-            "trading births for lower mortality is not advisable."
+            "The food company pairs with the suffrage path: its +5% birth "
+            "multiplier cancels the suffrage law's −5% birth penalty, "
+            "leaving the birth channel at zero while the target keeps rising. "
+            "Mortality multipliers have little effect on the ratio itself "
+            "(numerator and denominator move together); trading births for "
+            "lower mortality is not advisable."
+        ),
+        "ratio_data_ref_p1": (
+            "Three workforce-sensitivity charts in the data report support these "
+            "claims. The <a href=\"demography_report_en.html#wf-target_ratio\">"
+            "target-ratio sensitivity chart</a> shows five curves converging to "
+            "25 / 35 / 40 / 45 / 50%; each asymptote equals the law-stack sum, "
+            "and no birth-rate or SoL change pushes a curve past its target."
+        ),
+        "ratio_data_ref_p2": (
+            "The <a href=\"demography_report_en.html#wf-sol\">SoL sensitivity "
+            "chart</a> covers SoL 5–25 with nine curves. SoL 10 and SoL 12 "
+            "converge fastest, both reaching 40% within 16 years. SoL 5 lags "
+            "(base mortality equals birth), and SoL 25 lags (base birth is at "
+            "its floor). The relation between SoL and convergence speed is "
+            "non-monotonic: the optimum is in the 10–12 band."
+        ),
+        "ratio_data_ref_p3": (
+            "The <a href=\"demography_report_en.html#wf-birth_multiplier\">"
+            "birth-rate sensitivity chart</a> and "
+            "<a href=\"demography_report_en.html#wf-mortality_multiplier\">"
+            "mortality-rate sensitivity chart</a> compare the two modifier "
+            "channels side by side. Birth-rate curves spread across a 5-year "
+            "time-to-target band; mortality-rate curves visually overlap. The "
+            "population-index sub-chart on the same page shows +50% mortality "
+            "leaves the ratio close to target while pulling the population "
+            "index from ~1.5 to ~0.6 over 100 years. Births shift the ratio; "
+            "mortality shifts population size."
         ),
 
         "industry_title": "Population Cost of Industrialisation",
@@ -542,6 +589,19 @@ ANALYSIS_TEXT = {
             "methods and adding pollution-reduction infrastructure yields a "
             "larger population gain than Public Health alone; the latter "
             "should be treated as damage control rather than a primary remedy."
+        ),
+        "industry_data_ref": (
+            "The data report's <a href=\"demography_report_en.html#section-pollution\">"
+            "pollution section</a> contains the steady-state table and the "
+            "transient curve. At the engine's default change speed, the time "
+            "constant from zero to steady state is ~1000 months: a state "
+            "generating 2000 pollution needs about 50 years to reach half of "
+            "its steady-state impact, so early industrialisation pays less than "
+            "the steady-state table suggests. The "
+            "<a href=\"demography_report_en.html#net-pollution\">net-growth "
+            "pollution sensitivity chart</a> isolates pollution's effect: 100% "
+            "pollution flattens net growth across the entire SoL range, and "
+            "0% versus 50% pollution costs about 0.8% at SoL 15."
         ),
 
         "famine_title": "Famine and Recovery",
@@ -568,9 +628,9 @@ ANALYSIS_TEXT = {
             "The literacy penalty applies a birth-rate multiplier of −0.1 "
             "scaled linearly by pop literacy; full literacy reduces birth "
             "rate by 10%. In absolute terms: SoL 12 birth rate moves from "
-            "{birth_12_lit0}/yr to {birth_12_lit1}/yr, a {drop_12} pp drop; "
+            "{birth_12_lit0}/yr to {birth_12_lit1}/yr, a {drop_12}% drop; "
             "SoL 15 moves from {birth_15_lit0} to {birth_15_lit1}, a "
-            "{drop_15} pp drop."
+            "{drop_15}% drop."
         ),
         "literacy_body_p2": (
             "Relative to the productivity gains literacy enables — "
@@ -578,6 +638,14 @@ ANALYSIS_TEXT = {
             "upper-strata standard-of-living improvements — the birth-rate "
             "cost is small. Suppressing literacy to raise births is not "
             "advisable."
+        ),
+        "literacy_data_ref": (
+            "The data report's <a href=\"demography_report_en.html#net-literacy\">"
+            "net-growth literacy sensitivity chart</a> shows 0%–100% literacy "
+            "as five parallel curves offset by the birth-rate penalty. The "
+            "<a href=\"demography_report_en.html#wf-literacy\">workforce-ratio "
+            "counterpart</a> shows all five curves still converging to the same "
+            "50% target — literacy affects convergence speed, not the asymptote."
         ),
 
         "figures_pointer_title": "Raw Data",
@@ -644,6 +712,32 @@ ANALYSIS_TEXT = {
         "col_years_to_45": "Years to 45%",
         "col_ratio_at_50y": "Ratio after 50 yr",
         "col_ratio_at_100y": "Ratio after 100 yr",
+        "col_initial_ratio": "Initial ratio",
+        "ratio_skew_para": (
+            "The skew correction is the largest convergence accelerator in the "
+            "model. At SoL 12, 25% → 50% path, no birth-rate modifier: with the "
+            "correction the ratio reaches 40% in {skew_on_40} years; without it, "
+            "{skew_off_40} years. At the 50-year mark the two trajectories "
+            "differ by {skew_diff_40}%."
+        ),
+        "ratio_initial_para": (
+            "Sweeping the initial ratio at constant law stack:"
+        ),
+        "ratio_initial_after": (
+            "Starting 10% earlier saves 7–10 years on the way to 40%. The law "
+            "stack still dominates: a state starting at 35% but capped at 35% "
+            "target (no suffrage) stays at 35%."
+        ),
+        "ratio_birth_para": (
+            "Birth-rate modifiers at fixed target shift convergence speed "
+            "within a ±5-year band:"
+        ),
+        "ratio_birth_after": (
+            "Each ±5% birth modifier moves time-to-40% by about 4 years. The "
+            "food company's +5% by itself matches the convergence gain from "
+            "passing one additional women's-rights law tier, because the "
+            "modifier compounds across the full convergence window."
+        ),
     },
     "zh": {
         "html_lang": "zh-CN",
@@ -665,25 +759,36 @@ ANALYSIS_TEXT = {
 
         "health_title": "医疗法案的选择",
         "health_body_p1": (
-            "公立医疗对死亡率施加 −5% 的固定乘数，并对污染健康损害额外减少 15%。"
-            "慈善医院的对应数值为 −3% 与 −10%，两条通道均弱于公立。"
+            "公共医保对死亡率施加 −5% 的固定乘数，并对污染健康损害额外减少 15%。"
+            "慈善医院的对应数值为 −3% 与 −10%，两条通道均弱于公共医保。"
             "私立医疗使用按财富缩放的死亡率通道（系数 −0.002）；"
             "在「财富 = 1.5 × SoL」的线性近似下，"
-            "其死亡率减免需 SoL 不低于 {breakeven_sol} 才能与公立相当。"
+            "其死亡率减免需 SoL 不低于 {breakeven_sol} 才能与公共医保相当。"
         ),
         "health_body_p2": (
-            "在污染情境下结论有所调整。50% 污染冲击下，"
-            "公立医疗将有效 SoL 拉回 0.75，私立仅拉回 0.45；"
-            "5 pp 的污染减免差距反映在死亡率上为 SoL 20 时"
-            "公立 {public_mort_50_sol20}/年、私立 {private_mort_50_sol20}/年。"
-            "仅在州污染低于 25% 且 SoL 稳定在 20 以上时，"
-            "私立医疗较公立具有边际优势；其余情境下应选公立。"
+            "公共医保还会带来 +0.5 SoL 的全州加成。50% 污染冲击下，"
+            "+0.5 SoL 与 −15% 污染减免叠加使有效 SoL 仅净损 0.78；"
+            "私立医疗只有 −10% 污染减免，有效 SoL 净损 1.35。"
+            "SoL 20 时公共医保年死亡率为 {public_mort_50_sol20}，私立为 {private_mort_50_sol20}。"
+            "公共医保在 SoL 25 以下区间优于私立；只有州内 wealth 增速持续高于 SoL，"
+            "私立的 wealth-scaled 通道才可能追平。"
         ),
         "health_body_p3": (
             "慈善医院在药学研究完成前作为过渡选项。"
-            "其 −10% 的污染减免低于公立 5 pp，"
-            "且原始死亡率减免亦不及私立。"
-            "公立医疗研究完成后应及时替换。"
+            "其 −10% 的污染减免低于公共医保 5%，原始死亡率减免亦不及私立医疗，"
+            "公共医保研究完成后应替换。"
+        ),
+        "health_data_ref": (
+            "数据报告的<a href=\"demography_report_zh.html#net-healthcare\">"
+            "净增长 · 医疗制度敏感性图（0% 污染）</a>与"
+            "<a href=\"demography_report_zh.html#net-healthcare_pollution\">"
+            "50% 污染下的同图</a>把四套制度画在同一坐标系。"
+            "无污染时公共医保、私立、慈善在 SoL 16 以上几乎重合，"
+            "净增长差距不到 0.1%；50% 污染下四条曲线在整段 SoL 区间拉开，"
+            "公共医保始终在私立之上。"
+            "<a href=\"demography_report_zh.html#wf-healthcare\">"
+            "劳动力比例 · 医疗制度敏感性图</a>下，"
+            "医疗制度对比例本身影响有限，差异主要体现在总人口规模。"
         ),
 
         "food_title": "通用食品公司",
@@ -696,16 +801,24 @@ ANALYSIS_TEXT = {
             "SoL 5 接近自然增长平衡点，0% 净增长被拉至 0.27%，"
             "相对变化最大，倍数同样为 {mult_5}。"
         ),
+        "food_data_ref": (
+            "数据报告的<a href=\"demography_report_zh.html#net-birth_multiplier\">"
+            "净增长 · 出生率乘数敏感性图</a>给出 ±10% 完整扫描。"
+            "+5% 曲线在 SoL 15 处读数 2.69%/年，基准 2.50%/年，差 +{delta_15}。"
+            "SoL 25 以后所有曲线收敛于同一速率，因为基础出生率已触底。"
+            "<a href=\"demography_report_zh.html#wf-birth_multiplier\">"
+            "劳动力比例 · 出生率乘数敏感性图</a>下，同样 +5% 把从 25% 起步的收敛时间缩短约 4 年。"
+        ),
 
         "ratio_title": "劳动力比例的提升路径",
         "ratio_body_p1": (
-            "长期上限为法律与特性所贡献的工作年龄比例加成之和："
+            "长期上限为法律与特性贡献的工作年龄比例加成之和："
             "女性工作 +10%、妇女选举 +15%、"
-            "工会两层特性各 +5%，在 25% 基础上累计为 50%。"
-            "该值即模型中的渐近线，无法被进一步超越。"
+            "工会两层特性各 +5%，在 25% 基础上累计 50%，"
+            "即模型的渐近线。"
         ),
         "ratio_body_p2": (
-            "收敛速度由出生率主导。"
+            "劳动力比例的收敛速度由出生率主导。"
             "新生人口按目标比例分配至工作年龄，"
             "出生率越高，当前比例向目标的拉动越快。"
             "引擎附带工作年龄比例偏移修正（上限因子 2.0）："
@@ -713,22 +826,41 @@ ANALYSIS_TEXT = {
             "等效将收敛速度再加倍。"
         ),
         "ratio_body_p3": (
-            "一项反直觉结果：相同法律组合下，"
+            "相同法律组合下，"
             "SoL 12 时从 25% 提升至 40% 需 {years_sol12} 年，"
-            "SoL 15 时需 {years_sol15} 年。"
+            "SoL 15 需 {years_sol15} 年。"
             "SoL 12 的基础出生率（{birth_sol12}/年）"
             "较 SoL 15（{birth_sol15}/年）高约 25%，"
-            "而比例收敛由出生率驱动。"
-            "若劳动力比例为优先目标，SoL 应稳定在 10–12 区间，"
-            "而非追求更高数值。"
+            "比例收敛由出生率驱动。"
+            "劳动力比例优先时，SoL 应稳定在 10–12 区间。"
         ),
         "ratio_body_p4": (
-            "通用食品公司可与妇女选举路径形成互补："
-            "其 +5% 出生率乘数恰好抵消选举法律附带的 −5% 出生率乘数，"
-            "在出生率通道净零的同时目标比例继续上升。"
-            "死亡率乘数对劳动力比例本身影响有限"
-            "（分子分母同向变化），"
+            "通用食品公司的 +5% 出生率乘数可抵消选举法律的 −5% 出生率乘数，"
+            "出生率通道净零的同时目标比例继续上升。"
+            "死亡率乘数对劳动力比例本身影响有限（分子分母同向变化），"
             "不宜以降低死亡率为代价牺牲出生率。"
+        ),
+        "ratio_data_ref_p1": (
+            "数据报告三张劳动力敏感性图直接支持上述结论。"
+            "<a href=\"demography_report_zh.html#wf-target_ratio\">劳动力比例 · 目标比例敏感性图</a>"
+            "的五条曲线分别收敛到 25 / 35 / 40 / 45 / 50%，每条渐近线即对应法律堆叠之和。"
+            "出生率或 SoL 的变动不能跨过曲线自身的目标上限。"
+        ),
+        "ratio_data_ref_p2": (
+            "<a href=\"demography_report_zh.html#wf-sol\">劳动力比例 · SoL 敏感性图</a>"
+            "覆盖 SoL 5–25 共九条曲线。"
+            "SoL 10、12 收敛最快，16 年内到 40%；"
+            "SoL 5 滞后（基础死亡率与出生率持平），"
+            "SoL 25 滞后（基础出生率触底）。"
+            "收敛速度与 SoL 之间为非单调关系，最快区间在 SoL 10–12。"
+        ),
+        "ratio_data_ref_p3": (
+            "<a href=\"demography_report_zh.html#wf-birth_multiplier\">劳动力比例 · 出生率乘数敏感性图</a>"
+            "与<a href=\"demography_report_zh.html#wf-mortality_multiplier\">死亡率乘数敏感性图</a>"
+            "并列对比两条修正通道。出生率曲线在 5 年时间带内分散，死亡率曲线几乎重叠。"
+            "同页下方的<em>人口指数副图</em>显示，"
+            "+50% 死亡率几乎不动比例，但 100 年内把人口指数从约 1.5 拉到 0.6。"
+            "出生率改变比例，死亡率改变人口规模。"
         ),
 
         "industry_title": "工业化的人口代价",
@@ -740,14 +872,24 @@ ANALYSIS_TEXT = {
         ),
         "industry_col_pollution": "污染",
         "industry_col_no_health": "无医疗（人口倍数）",
-        "industry_col_public": "公立医疗（人口倍数）",
+        "industry_col_public": "公共医保（人口倍数）",
         "industry_col_uplift": "公立提升",
         "industry_body_p2": (
             "50% 污染冲击下，州人口较 0% 污染情形减少 {loss_50}%，"
-            "公立医疗可挽回其中约 {uplift_50}，但缺口无法完全弥补。"
+            "公共医保可挽回其中约 {uplift_50}，但缺口无法完全弥补。"
             "工业核心州中，切换至林业 / 电气化生产方式及部署减污染建筑"
-            "较单纯依赖公立医疗更为有效；"
-            "公立医疗的角色为损害控制而非根本解决。"
+            "较单纯依赖公共医保更为有效；"
+            "公共医保的角色为损害控制而非根本解决。"
+        ),
+        "industry_data_ref": (
+            "数据报告的<a href=\"demography_report_zh.html#section-pollution\">污染节</a>"
+            "包含稳态参考表（污染生成、可耕地 → 长期 impact）与瞬态曲线。"
+            "按引擎默认变化速率，从 0 涨到稳态的时间常数约 1000 月："
+            "污染生成 2000 的州约需 50 年达到稳态 impact 的一半，"
+            "因此开荒前 50 年的人口代价低于稳态值。"
+            "<a href=\"demography_report_zh.html#net-pollution\">净增长 · 污染敏感性图</a>"
+            "孤立出污染的影响：100% 污染下整段 SoL 区间的净增长曲线几乎被压平；"
+            "0% 与 50% 污染在 SoL 15 处相差约 0.8%。"
         ),
 
         "famine_title": "饥荒与恢复",
@@ -758,11 +900,10 @@ ANALYSIS_TEXT = {
             "严重饥荒惩罚（−90% / +100%）"
             "在相同条件下 5 年损失 {severe_loss}%，"
             "需约 {severe_recover} 年方能恢复，"
-            "在本报告 30 年观察窗口内构成持久性人口损失。"
+            "在 30 年观察窗口内构成持久性人口损失。"
         ),
         "famine_body_p2": (
-            "严重饥荒应在事件链完成前优先处理"
-            "（颁布敕令、调粮、降低关税）；"
+            "严重饥荒应在事件链完成前优先处理；"
             "普通饥荒具备自愈能力，资源投入可适度降低。"
         ),
 
@@ -770,14 +911,21 @@ ANALYSIS_TEXT = {
         "literacy_body_p1": (
             "识字率惩罚施加 −0.1 的出生率乘数，"
             "按人口识字率线性缩放，满识字率对应出生率下降 10%。"
-            "绝对 pp 值：SoL 12 由 {birth_12_lit0}/年降至 {birth_12_lit1}/年，"
-            "下降 {drop_12} pp；"
-            "SoL 15 由 {birth_15_lit0} 降至 {birth_15_lit1}，下降 {drop_15} pp。"
+            "绝对百分值：SoL 12 由 {birth_12_lit0}/年降至 {birth_12_lit1}/年，"
+            "下降 {drop_12}%；"
+            "SoL 15 由 {birth_15_lit0} 降至 {birth_15_lit1}，下降 {drop_15}%。"
         ),
         "literacy_body_p2": (
-            "与识字率带来的收益（生产方式解锁、知识分子政治影响、"
-            "上层 SoL 提升）相比，该出生率损失影响有限，"
-            "不宜以压低识字率换取出生率提升。"
+            "与识字率带来的收益相比，该出生率损失影响有限，"
+            "因此不宜以压低识字率换取出生率提升。"
+        ),
+        "literacy_data_ref": (
+            "数据报告的<a href=\"demography_report_zh.html#net-literacy\">"
+            "净增长 · 识字率敏感性图</a>把 0%–100% 识字率画成五条几乎平行的曲线，"
+            "纵向间距对应出生率惩罚。"
+            "<a href=\"demography_report_zh.html#wf-literacy\">"
+            "劳动力比例 · 识字率敏感性图</a>下，五条曲线最终都收敛到 50% 目标，"
+            "识字率影响收敛速度但不改变终点。"
         ),
 
         "figures_pointer_title": "原始数据",
@@ -835,6 +983,30 @@ ANALYSIS_TEXT = {
         "col_years_to_45": "到 45% 年数",
         "col_ratio_at_50y": "50 年后比例",
         "col_ratio_at_100y": "100 年后比例",
+        "col_initial_ratio": "初始比例",
+        "ratio_skew_para": (
+            "skew 修正是模型中最大的收敛加速通道。"
+            "SoL 12、25% → 50% 路径、无出生率乘数的基准下，"
+            "启用修正 {skew_on_40} 年达到 40%，"
+            "关闭修正 {skew_off_40} 年；"
+            "50 年时刻两条轨迹相差 {skew_diff_40}%。"
+        ),
+        "ratio_initial_para": (
+            "在固定法律组合下扫描初始劳动力比例："
+        ),
+        "ratio_initial_after": (
+            "初始比例每提前 10%，到 40% 的时间缩短 7–10 年。"
+            "法律堆叠仍是主导因素：起始 35% 但目标上限 35%（未通过妇女选举）"
+            "的州停在 35%。"
+        ),
+        "ratio_birth_para": (
+            "目标比例固定下，出生率乘数扫描显示 ±5 年的收敛带宽："
+        ),
+        "ratio_birth_after": (
+            "每 ±5% 的出生率乘数将到 40% 的时间挪动约 4 年。"
+            "单独开通用食品（+5%）带来的收敛收益约等于"
+            "再通过一档女权法律层级，因为该乘数在整个收敛窗口内复利。"
+        ),
     },
 }
 
