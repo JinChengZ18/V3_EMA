@@ -25,7 +25,7 @@ from .demography.game_modifiers import (
 )
 from .demography.model import pollution_impact_from_generation, simulate_pollution
 from .demography.modifier_scan import scan_modifier_sources, summarize_sources
-from .demography.report import build_analysis_report, build_html_report
+from .demography.report import build_analysis_report
 from .demography.rows import (
     make_grouped_rates_rows,
     make_projection_rows,
@@ -498,7 +498,7 @@ def cmd_demography_report(args: argparse.Namespace) -> int:
 
     if not args.no_html:
         for language in _demography_languages(args):
-            compact_report = build_html_report(
+            report_html = build_analysis_report(
                 game_root=game_root,
                 constants=constants,
                 scenarios=scenarios,
@@ -513,28 +513,15 @@ def cmd_demography_report(args: argparse.Namespace) -> int:
                 projection_target_ratio=projection_target_ratio,
                 projection_sol=args.projection_sol,
                 language=language,
-                compact=True,
             )
-            analysis_report = build_analysis_report(
-                game_root=game_root,
-                constants=constants,
-                scenarios=scenarios,
-                rates_rows=rates_rows,
-                projection_rows=projection_rows,
-                growth_sensitivity_rows=growth_sensitivity_rows,
-                sensitivity_rows=sensitivity_rows,
-                source_summary=source_summary,
-                pollution_examples=pollution_examples,
-                projection_initial_ratio=projection_initial_ratio,
-                projection_target_ratio=projection_target_ratio,
-                projection_sol=args.projection_sol,
-                language=language,
-            )
-            compact_path = out_dir / f"demography_report_{language}.html"
-            analysis_path = out_dir / f"demography_analysis_report_{language}.html"
-            compact_path.write_text(compact_report, encoding="utf-8")
-            analysis_path.write_text(analysis_report, encoding="utf-8")
-            written += [compact_path, analysis_path]
+            report_path = out_dir / f"demography_report_{language}.html"
+            report_path.write_text(report_html, encoding="utf-8")
+            written.append(report_path)
+            # The earlier two-file split (analysis + chart appendix) is now
+            # a single document; remove the stale companion if present.
+            stale_path = out_dir / f"demography_analysis_report_{language}.html"
+            if stale_path.exists():
+                stale_path.unlink()
 
         duplicate_generic = out_dir / "demography_report.html"
         if duplicate_generic.exists():

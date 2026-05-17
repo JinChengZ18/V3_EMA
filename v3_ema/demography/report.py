@@ -351,192 +351,6 @@ def _render_data_dictionary(text: dict, language: str) -> str:
     return "\n".join(sections)
 
 
-def build_html_report(
-    *,
-    game_root: Path,
-    constants: PopGrowthConstants,
-    scenarios: list[Scenario],
-    rates_rows: list[dict[str, object]],
-    projection_rows: list[dict[str, object]],
-    growth_sensitivity_rows: list[dict[str, object]],
-    sensitivity_rows: list[dict[str, object]],
-    source_summary: list[dict[str, str | float | int]],
-    pollution_examples: list[dict[str, object]] | None,
-    pollution_dynamics_rows: list[dict[str, object]] | None,
-    projection_initial_ratio: float,
-    projection_target_ratio: float,
-    projection_sol: float,
-    language: str,
-    compact: bool = False,
-) -> str:
-    text = REPORT_TEXT[language]
-    sol_values = sorted({float(r["sol"]) for r in rates_rows})
-    base_birth = [(s, base_birth_rate(s, constants) * 12.0) for s in sol_values]
-    base_mortality_points = [(s, base_mortality(s, constants) * 12.0) for s in sol_values]
-    base_natural_growth = [(s, birth - mortality) for (s, birth), (_, mortality) in zip(base_birth, base_mortality_points)]
-    base_series = [
-        ("birth", base_birth),
-        ("mortality", base_mortality_points),
-        ("natural growth", base_natural_growth),
-    ]
-
-    net_series = []
-    for scenario in scenarios:
-        if scenario.name in NET_OVERVIEW_EXCLUDE:
-            continue
-        points = [
-            (float(r["sol"]), float(r["net_annual"]))
-            for r in rates_rows
-            if r["scenario"] == scenario.name
-        ]
-        if points:
-            net_series.append((scenario.name, points))
-
-    projection_series = projection_series_from_rows(projection_rows, language)
-    if not projection_series:
-        projection_series = [(tr_label(scenarios[0].name, language), [])]
-
-    workforce_bounds = workforce_chart_bounds(projection_initial_ratio, projection_target_ratio)
-
-    sensitivity_palette_map = {
-        "birth_multiplier": "coolwarm",
-        "mortality_multiplier": "coolwarm",
-        "literacy": "viridis",
-        "pollution": "viridis",
-        "target_ratio": "viridis",
-        "sol": "viridis",
-        "healthcare": "categorical",
-        "healthcare_pollution": "categorical",
-    }
-
-    def palette_for(group_key: str) -> str:
-        return sensitivity_palette_map.get(group_key, "categorical")
-
-    # Key SoL break-points to annotate on every SoL-axis chart.
-    if language == "zh":
-        base_annotations = [
-            {"x": float(constants.equilibrium_sol), "label": f"SoL {int(constants.equilibrium_sol)}：净增长 = 0"},
-            {"x": float(constants.transition_sol), "label": f"SoL {int(constants.transition_sol)}：出生率开始下降"},
-            {"x": float(constants.growth_max_sol), "label": f"SoL {int(constants.growth_max_sol)}：净增长峰值"},
-            {"x": float(constants.stable_sol), "label": f"SoL {int(constants.stable_sol)}：曲线触底"},
-        ]
-        net_annotations = [
-            {"x": float(constants.equilibrium_sol), "label": f"SoL {int(constants.equilibrium_sol)}：增长为零"},
-            {"x": float(constants.growth_max_sol), "label": f"SoL {int(constants.growth_max_sol)}：增长峰值"},
-        ]
-    else:
-        base_annotations = [
-            {"x": float(constants.equilibrium_sol), "label": f"SoL {int(constants.equilibrium_sol)}: net = 0"},
-            {"x": float(constants.transition_sol), "label": f"SoL {int(constants.transition_sol)}: birth declines"},
-            {"x": float(constants.growth_max_sol), "label": f"SoL {int(constants.growth_max_sol)}: net peak"},
-            {"x": float(constants.stable_sol), "label": f"SoL {int(constants.stable_sol)}: floors"},
-        ]
-        net_annotations = [
-            {"x": float(constants.equilibrium_sol), "label": f"SoL {int(constants.equilibrium_sol)}: zero crossing"},
-            {"x": float(constants.growth_max_sol), "label": f"SoL {int(constants.growth_max_sol)}: peak"},
-        ]
-    sol_xticks = [0, 5, 10, 15, 20, 25, 30, 35]
-
-    net_sensitivity_sections = []
-    for group_key in NET_SENSITIVITY_GROUP_KEYS:
-        group_rows = [row for row in growth_sensitivity_rows if row["factor_group"] == group_key]
-        if not group_rows:
-            continue
-        title = SENSITIVITY_GROUPS[group_key][language]
-        note = SENSITIVITY_NOTES[group_key][language]
-        note_html = "" if compact else f'<p class="small">{html.escape(note)}</p>'
-        net_sensitivity_sections.append(
-            f"""
-<h3 id="net-{group_key}">{html.escape(title)}</h3>
-{note_html}
-{svg_line_chart(title, net_growth_series_from_rows(group_rows, language), x_label=text["sol_axis"], y_label=text["net_axis"], y_scale="symlog", integer_percent_y_ticks=True, zero_baseline=True, palette=palette_for(group_key), x_ticks=sol_xticks, annotations=net_annotations)}
-"""
-        )
-    net_sensitivity_html = "\n".join(net_sensitivity_sections)
-
-    sensitivity_sections = []
-    for group_key, group_labels in SENSITIVITY_GROUPS.items():
-        group_rows = [row for row in sensitivity_rows if row["factor_group"] == group_key]
-        if not group_rows:
-            continue
-        title = group_labels[language]
-        note = SENSITIVITY_NOTES[group_key][language]
-        note_html = "" if compact else f'<p class="small">{html.escape(note)}</p>'
-        population_chart = ""
-        if group_key == "mortality_multiplier":
-            population_chart = svg_line_chart(
-                text["mortality_population_chart"],
-                population_index_series_from_rows(group_rows, language),
-                x_label=text["years_axis"],
-                y_label=text["population_index_axis"],
-                y_as_percent=False,
-                palette=palette_for(group_key),
-            )
-        sensitivity_sections.append(
-            f"""
-<h3 id="wf-{group_key}">{html.escape(title)}</h3>
-{note_html}
-{svg_workforce_chart(title, projection_series_from_rows(group_rows, language), x_label=text["years_axis"], y_label=text["workforce_axis"], palette=palette_for(group_key), bounds=workforce_bounds)}
-{population_chart}
-"""
-        )
-    sensitivity_html = "\n".join(sensitivity_sections)
-
-    scenario_inputs_table = _render_scenario_inputs_table(scenarios, language, text)
-    modifier_summary_table = _render_modifier_summary_table(source_summary, text, top_n=30)
-    data_dict_html = _render_data_dictionary(text, language)
-    pollution_steady_table_html = (
-        _render_pollution_steady_table(pollution_examples, text)
-        if pollution_examples else ""
-    )
-
-    return f"""<!doctype html>
-<html lang="{text['html_lang']}">
-<head>
-<meta charset="utf-8">
-<title>{html.escape(text['chart_appendix_title'])}</title>
-<style>
-{REPORT_CSS}
-</style>
-</head>
-<body>
-<main>
-<h1>{html.escape(text['chart_appendix_title'])}</h1>
-<p class="small">{text['chart_appendix_intro']}</p>
-
-<h2>{html.escape(text['formula_title'])}</h2>
-<div class="card">{formula_block(constants, language)}</div>
-
-<h2 id="section-base">{html.escape(text['section_base_charts'])}</h2>
-{svg_line_chart(text["base_chart"], localized_series(base_series, language), x_label=text["sol_axis"], y_label=text["rate_axis"], zero_baseline=True, style_keys=BASE_SERIES_STYLE_KEYS, x_ticks=sol_xticks, annotations=base_annotations)}
-
-<h2 id="section-scenarios">{html.escape(text['section_scenarios_table'])}</h2>
-{scenario_inputs_table}
-
-<h2 id="section-net">{html.escape(text['section_net_charts'])}</h2>
-{svg_line_chart(text["net_chart"], localized_series(net_series, language), x_label=text["sol_axis"], y_label=text["net_axis"], y_scale="symlog", integer_percent_y_ticks=True, zero_baseline=True, x_ticks=sol_xticks, annotations=net_annotations)}
-{net_sensitivity_html}
-
-<h2 id="section-workforce">{html.escape(text['section_workforce_charts'])}</h2>
-{svg_workforce_chart(text["workforce_chart"], projection_series, x_label=text["years_axis"], y_label=text["workforce_axis"], bounds=workforce_bounds)}
-{sensitivity_html}
-
-<h2 id="section-pollution">{html.escape(text['section_pollution_charts'])}</h2>
-{pollution_steady_table_html}
-{_render_pollution_dynamics_chart(pollution_dynamics_rows or [], text)}
-
-<h2 id="section-modifiers">{html.escape(text['section_modifier_section'])}</h2>
-{svg_bar_chart(text["source_chart"], source_summary, key_field="key", value_field="count")}
-{modifier_summary_table}
-
-<h2 id="section-dict">{html.escape(text['section_dict'])}</h2>
-{data_dict_html}
-</main>
-</body>
-</html>
-"""
-
-
 def _fmt_years(years: float | None, fallback: str = "—") -> str:
     if years is None:
         return fallback
@@ -885,15 +699,155 @@ def build_analysis_report(
     language: str,
     scenarios: list[Scenario] | None = None,
     pollution_examples: list[dict[str, object]] | None = None,
+    pollution_dynamics_rows: list[dict[str, object]] | None = None,
 ) -> str:
-    """Build the analysis-article HTML.
+    """Build the single merged demography report.
 
-    Prose + a small set of argument-critical charts and tables. The full set
-    of raw data tables (scenario definitions, modifier scan, pollution
-    steady-state, data dictionary) and the systematic figure set live in the
-    companion file produced by ``build_html_report``.
+    Combines the analysis prose with every supporting figure inline, so the
+    reader doesn't have to follow cross-document links to see the
+    sensitivity panels referenced by each section.
     """
     text = ANALYSIS_TEXT[language]
+    report_text = REPORT_TEXT[language]
+    scenarios = scenarios or []
+
+    # ---- Shared chart-rendering scaffolding (formerly build_html_report) ----
+    sol_values = sorted({float(r["sol"]) for r in rates_rows})
+    base_birth = [(s, base_birth_rate(s, constants) * 12.0) for s in sol_values]
+    base_mortality_points = [(s, base_mortality(s, constants) * 12.0) for s in sol_values]
+    base_natural_growth = [
+        (s, birth - mortality)
+        for (s, birth), (_, mortality) in zip(base_birth, base_mortality_points)
+    ]
+    base_series = [
+        ("birth", base_birth),
+        ("mortality", base_mortality_points),
+        ("natural growth", base_natural_growth),
+    ]
+    net_series = []
+    for scenario in scenarios:
+        if scenario.name in NET_OVERVIEW_EXCLUDE:
+            continue
+        points = [
+            (float(r["sol"]), float(r["net_annual"]))
+            for r in rates_rows
+            if r["scenario"] == scenario.name
+        ]
+        if points:
+            net_series.append((scenario.name, points))
+    projection_series = projection_series_from_rows(projection_rows, language)
+    if not projection_series and scenarios:
+        projection_series = [(tr_label(scenarios[0].name, language), [])]
+    workforce_bounds = workforce_chart_bounds(projection_initial_ratio, projection_target_ratio)
+
+    sensitivity_palette_map = {
+        "birth_multiplier": "coolwarm",
+        "mortality_multiplier": "coolwarm",
+        "literacy": "viridis",
+        "pollution": "viridis",
+        "target_ratio": "viridis",
+        "sol": "viridis",
+        "healthcare": "categorical",
+        "healthcare_pollution": "categorical",
+    }
+
+    def palette_for(group_key: str) -> str:
+        return sensitivity_palette_map.get(group_key, "categorical")
+
+    if language == "zh":
+        base_annotations = [
+            {"x": float(constants.equilibrium_sol), "label": f"SoL {int(constants.equilibrium_sol)}:净增长=0"},
+            {"x": float(constants.transition_sol), "label": f"SoL {int(constants.transition_sol)}:出生率下降"},
+            {"x": float(constants.growth_max_sol), "label": f"SoL {int(constants.growth_max_sol)}:净增长峰值"},
+            {"x": float(constants.stable_sol), "label": f"SoL {int(constants.stable_sol)}:曲线触底"},
+        ]
+        net_annotations = [
+            {"x": float(constants.equilibrium_sol), "label": f"SoL {int(constants.equilibrium_sol)}:增长为零"},
+            {"x": float(constants.growth_max_sol), "label": f"SoL {int(constants.growth_max_sol)}:增长峰值"},
+        ]
+    else:
+        base_annotations = [
+            {"x": float(constants.equilibrium_sol), "label": f"SoL {int(constants.equilibrium_sol)}: net=0"},
+            {"x": float(constants.transition_sol), "label": f"SoL {int(constants.transition_sol)}: birth declines"},
+            {"x": float(constants.growth_max_sol), "label": f"SoL {int(constants.growth_max_sol)}: net peak"},
+            {"x": float(constants.stable_sol), "label": f"SoL {int(constants.stable_sol)}: floors"},
+        ]
+        net_annotations = [
+            {"x": float(constants.equilibrium_sol), "label": f"SoL {int(constants.equilibrium_sol)}: zero"},
+            {"x": float(constants.growth_max_sol), "label": f"SoL {int(constants.growth_max_sol)}: peak"},
+        ]
+    sol_xticks = [0, 5, 10, 15, 20, 25, 30, 35]
+
+    base_curves_chart = svg_line_chart(
+        report_text["base_chart"], localized_series(base_series, language),
+        x_label=report_text["sol_axis"], y_label=report_text["rate_axis"],
+        zero_baseline=True, style_keys=BASE_SERIES_STYLE_KEYS,
+        x_ticks=sol_xticks, annotations=base_annotations,
+    )
+    net_default_chart = svg_line_chart(
+        report_text["net_chart"], localized_series(net_series, language),
+        x_label=report_text["sol_axis"], y_label=report_text["net_axis"],
+        y_scale="symlog", integer_percent_y_ticks=True, zero_baseline=True,
+        x_ticks=sol_xticks, annotations=net_annotations,
+    )
+    workforce_default_chart = svg_workforce_chart(
+        report_text["workforce_chart"], projection_series,
+        x_label=report_text["years_axis"], y_label=report_text["workforce_axis"],
+        bounds=workforce_bounds,
+    )
+
+    # One chart per (factor_group, axis). The renderer plucks the chart for
+    # the group it wants inside each topical section.
+    net_sens_charts: dict[str, str] = {}
+    for group_key in NET_SENSITIVITY_GROUP_KEYS:
+        group_rows = [row for row in growth_sensitivity_rows if row["factor_group"] == group_key]
+        if not group_rows:
+            continue
+        title = SENSITIVITY_GROUPS[group_key][language]
+        net_sens_charts[group_key] = svg_line_chart(
+            title, net_growth_series_from_rows(group_rows, language),
+            x_label=report_text["sol_axis"], y_label=report_text["net_axis"],
+            y_scale="symlog", integer_percent_y_ticks=True, zero_baseline=True,
+            palette=palette_for(group_key), x_ticks=sol_xticks, annotations=net_annotations,
+        )
+
+    wf_sens_charts: dict[str, str] = {}
+    wf_pop_index_chart = ""
+    for group_key in SENSITIVITY_GROUPS.keys():
+        group_rows = [row for row in sensitivity_rows if row["factor_group"] == group_key]
+        if not group_rows:
+            continue
+        title = SENSITIVITY_GROUPS[group_key][language]
+        wf_sens_charts[group_key] = svg_workforce_chart(
+            title, projection_series_from_rows(group_rows, language),
+            x_label=report_text["years_axis"], y_label=report_text["workforce_axis"],
+            palette=palette_for(group_key), bounds=workforce_bounds,
+        )
+        if group_key == "mortality_multiplier":
+            wf_pop_index_chart = svg_line_chart(
+                report_text["mortality_population_chart"],
+                population_index_series_from_rows(group_rows, language),
+                x_label=report_text["years_axis"],
+                y_label=report_text["population_index_axis"],
+                y_as_percent=False,
+                palette=palette_for(group_key),
+            )
+
+    scenario_inputs_table = _render_scenario_inputs_table(scenarios, language, report_text)
+    modifier_summary_table = _render_modifier_summary_table(source_summary, report_text, top_n=30)
+    data_dict_html = _render_data_dictionary(report_text, language)
+    pollution_steady_table_html = (
+        _render_pollution_steady_table(pollution_examples, report_text)
+        if pollution_examples else ""
+    )
+    pollution_dynamics_chart = (
+        _render_pollution_dynamics_chart(pollution_dynamics_rows, report_text)
+        if pollution_dynamics_rows else ""
+    )
+    modifier_bar_chart = svg_bar_chart(
+        report_text["source_chart"], source_summary,
+        key_field="key", value_field="count",
+    )
 
     # ---- Healthcare metrics ----
     hc_rows = healthcare_comparison_table(
@@ -1046,21 +1000,35 @@ def build_analysis_report(
 <h2>{html.escape(text['intro_title'])}</h2>
 <p>{text['intro_body']}</p>
 
+<h2>{html.escape(text['base_section_title'])}</h2>
+<div class="card">{formula_block(constants, language)}</div>
+{base_curves_chart}
+<p>{text['base_section_body']}</p>
+<h3>{html.escape(text['scenarios_subtitle'])}</h3>
+{scenario_inputs_table}
+{net_default_chart}
+
 <h2>{html.escape(text['health_title'])}</h2>
 <p>{health_body_p1}</p>
 <p>{health_body_p2}</p>
 <p>{text['health_body_p3']}</p>
 {health_chart}
+{net_sens_charts.get("healthcare", "")}
+{net_sens_charts.get("healthcare_pollution", "")}
+{wf_sens_charts.get("healthcare", "")}
+{wf_sens_charts.get("healthcare_pollution", "")}
 <p>{text['health_data_ref']}</p>
 
 <h2>{html.escape(text['food_title'])}</h2>
 <p>{food_body_p1}</p>
 {food_chart}
+{net_sens_charts.get("birth_multiplier", "")}
 <p>{food_data_ref}</p>
 
 <h2>{html.escape(text['ratio_title'])}</h2>
 <p>{text['ratio_body_p1']}</p>
 <p>{text['ratio_body_p2']}</p>
+{workforce_default_chart}
 <p>{ratio_body_p3}</p>
 {lever_table_html}
 <p>{text['ratio_body_p4']}</p>
@@ -1071,31 +1039,49 @@ def build_analysis_report(
 <p>{text['ratio_birth_para']}</p>
 {birth_mod_table_html}
 <p>{text['ratio_birth_after']}</p>
+{wf_sens_charts.get("target_ratio", "")}
 <p>{text['ratio_data_ref_p1']}</p>
+{wf_sens_charts.get("sol", "")}
 <p>{text['ratio_data_ref_p2']}</p>
+{wf_sens_charts.get("birth_multiplier", "")}
+{wf_sens_charts.get("mortality_multiplier", "")}
+{wf_pop_index_chart}
 <p>{text['ratio_data_ref_p3']}</p>
 
 <h2>{html.escape(text['industry_title'])}</h2>
 <p>{text['industry_body_p1']}</p>
 {industrial_table_html}
 <p>{industry_body_p2}</p>
+{pollution_steady_table_html}
+{pollution_dynamics_chart}
+{net_sens_charts.get("pollution", "")}
+{wf_sens_charts.get("pollution", "")}
 <p>{text['industry_data_ref']}</p>
 
 <h2>{html.escape(text['famine_title'])}</h2>
 <p>{famine_body_p1}</p>
 {starvation_chart}
+{net_sens_charts.get("mortality_multiplier", "")}
 <p>{text['famine_body_p2']}</p>
 
 <h2>{html.escape(text['literacy_title'])}</h2>
 <p>{literacy_body_p1}</p>
+{net_sens_charts.get("literacy", "")}
+{wf_sens_charts.get("literacy", "")}
 <p>{text['literacy_body_p2']}</p>
 <p>{text['literacy_data_ref']}</p>
 
-<h2>{html.escape(text['figures_pointer_title'])}</h2>
-<p>{text['figures_pointer_body']}</p>
+<h2>{html.escape(text['modifier_section_title'])}</h2>
+<p>{text['modifier_section_body']}</p>
+{modifier_bar_chart}
+{modifier_summary_table}
 
 <h2>{html.escape(text['limits_title'])}</h2>
 {text['limits_body']}
+
+<h2>{html.escape(text['dict_section_title'])}</h2>
+<p>{text['dict_section_body']}</p>
+{data_dict_html}
 </main>
 </body>
 </html>

@@ -440,8 +440,28 @@ ANALYSIS_TEXT = {
             "health-system law, the timing of the food company, paths to "
             "raise the workforce ratio, and the population cost of "
             "industrialisation. All numerical findings derive from the CSV "
-            "outputs in the same directory; the companion data report holds "
-            "the full set of tables and figures."
+            "outputs in the same directory."
+        ),
+        "base_section_title": "Model Basis and Default Scenarios",
+        "base_section_body": (
+            "Base birth and mortality are piecewise-linear functions of SoL, "
+            "defined in <code>game/common/defines/00_defines.txt</code>. Birth "
+            "stays at its maximum below SoL 10 and declines linearly to its "
+            "floor at SoL 25; mortality declines steeply from SoL 0 to SoL 15 "
+            "before tapering. Net growth peaks near SoL 15."
+        ),
+        "scenarios_subtitle": "Default scenarios",
+        "modifier_section_title": "Reference: Modifier Source Scan",
+        "modifier_section_body": (
+            "Aggregate counts of population-relevant modifier keys observed "
+            "in <code>game/common</code> — number of hits, distinct files, "
+            "and the min / max of assigned values."
+        ),
+        "dict_section_title": "Data Dictionary",
+        "dict_section_body": (
+            "Column meanings for each CSV file generated alongside this "
+            "report. The tables and figures above are regenerated from these "
+            "files."
         ),
 
         "health_title": "Health-System Law",
@@ -472,16 +492,13 @@ ANALYSIS_TEXT = {
             "should be replaced."
         ),
         "health_data_ref": (
-            "The data report's <a href=\"demography_report_en.html#net-healthcare\">"
-            "net-growth healthcare sensitivity chart (0% pollution)</a> and "
-            "<a href=\"demography_report_en.html#net-healthcare_pollution\">"
-            "50%-pollution variant</a> plot the four systems on a common axis. "
-            "Without pollution, Public, Charitable, and Private nearly overlap "
-            "above SoL 16; under 50% pollution the curves separate across the "
-            "full SoL range, with Public above Private. The "
-            "<a href=\"demography_report_en.html#wf-healthcare\">workforce-ratio "
-            "sensitivity chart</a> shows the choice has little impact on the "
-            "ratio itself; the difference accumulates in total population."
+            "The healthcare sensitivity charts above (0% and 50% pollution) "
+            "plot the four systems on a common net-growth axis. Without "
+            "pollution, Public, Charitable, and Private nearly overlap above "
+            "SoL 16; under 50% pollution the curves separate across the full "
+            "SoL range, with Public above Private. On the workforce-ratio "
+            "axis, healthcare choice has little effect on the ratio; the "
+            "difference accumulates in total population."
         ),
 
         "food_title": "Food Company",
@@ -497,14 +514,10 @@ ANALYSIS_TEXT = {
             "change; the multiplier is also {mult_5}."
         ),
         "food_data_ref": (
-            "The data report's <a href=\"demography_report_en.html#net-birth_multiplier\">"
-            "net-growth birth-rate-multiplier sensitivity chart</a> sweeps "
-            "±10%. The +5% curve reads 2.69%/yr at SoL 15 versus the 2.50%/yr "
-            "baseline, a +{delta_15} difference. Past SoL 25 all curves "
-            "converge as base birth hits its floor. The "
-            "<a href=\"demography_report_en.html#wf-birth_multiplier\">workforce "
-            "sensitivity counterpart</a> shows the same +5% accelerates "
-            "convergence by about 4 years from a 25% start."
+            "The birth-rate-multiplier sensitivity above sweeps ±10%. The +5% "
+            "curve reads 2.69%/yr at SoL 15 versus the 2.50%/yr baseline, a "
+            "+{delta_15} difference. Past SoL 25 all curves converge as base "
+            "birth hits its floor."
         ),
 
         "ratio_title": "Raising the Workforce Ratio",
@@ -541,31 +554,25 @@ ANALYSIS_TEXT = {
             "lower mortality is not advisable."
         ),
         "ratio_data_ref_p1": (
-            "Three workforce-sensitivity charts in the data report support these "
-            "claims. The <a href=\"demography_report_en.html#wf-target_ratio\">"
-            "target-ratio sensitivity chart</a> shows five curves converging to "
+            "Target-ratio sensitivity (above): five curves converge to "
             "25 / 35 / 40 / 45 / 50%; each asymptote equals the law-stack sum, "
             "and no birth-rate or SoL change pushes a curve past its target."
         ),
         "ratio_data_ref_p2": (
-            "The <a href=\"demography_report_en.html#wf-sol\">SoL sensitivity "
-            "chart</a> covers SoL 5–25 with nine curves. SoL 10 and SoL 12 "
-            "converge fastest, both reaching 40% within 16 years. SoL 5 lags "
-            "(base mortality equals birth), and SoL 25 lags (base birth is at "
-            "its floor). The relation between SoL and convergence speed is "
-            "non-monotonic: the optimum is in the 10–12 band."
+            "SoL sensitivity covers SoL 5–25 with nine curves. SoL 10 and SoL "
+            "12 converge fastest, both reaching 40% within 16 years. SoL 5 "
+            "lags (base mortality equals birth), and SoL 25 lags (base birth "
+            "is at its floor). The relation between SoL and convergence speed "
+            "is non-monotonic: the optimum is in the 10–12 band."
         ),
         "ratio_data_ref_p3": (
-            "The <a href=\"demography_report_en.html#wf-birth_multiplier\">"
-            "birth-rate sensitivity chart</a> and "
-            "<a href=\"demography_report_en.html#wf-mortality_multiplier\">"
-            "mortality-rate sensitivity chart</a> compare the two modifier "
-            "channels side by side. Birth-rate curves spread across a 5-year "
-            "time-to-target band; mortality-rate curves visually overlap. The "
-            "population-index sub-chart on the same page shows +50% mortality "
-            "leaves the ratio close to target while pulling the population "
-            "index from ~1.5 to ~0.6 over 100 years. Births shift the ratio; "
-            "mortality shifts population size."
+            "The birth-rate and mortality-rate sensitivity charts compare the "
+            "two modifier channels side by side. Birth-rate curves spread "
+            "across a 5-year time-to-target band; mortality-rate curves "
+            "visually overlap. The population-index sub-chart shows +50% "
+            "mortality leaves the ratio close to target while pulling the "
+            "population index from ~1.5 to ~0.6 over 100 years. Births shift "
+            "the ratio; mortality shifts population size."
         ),
 
         "industry_title": "Population Cost of Industrialisation",
@@ -591,17 +598,14 @@ ANALYSIS_TEXT = {
             "should be treated as damage control rather than a primary remedy."
         ),
         "industry_data_ref": (
-            "The data report's <a href=\"demography_report_en.html#section-pollution\">"
-            "pollution section</a> contains the steady-state table and the "
-            "transient curve. At the engine's default change speed, the time "
-            "constant from zero to steady state is ~1000 months: a state "
-            "generating 2000 pollution needs about 50 years to reach half of "
-            "its steady-state impact, so early industrialisation pays less than "
-            "the steady-state table suggests. The "
-            "<a href=\"demography_report_en.html#net-pollution\">net-growth "
-            "pollution sensitivity chart</a> isolates pollution's effect: 100% "
+            "Steady-state and transient charts above: at the engine's default "
+            "change speed the time constant from zero to steady state is "
+            "~1000 months, so a state generating 2000 pollution needs about "
+            "50 years to reach half its steady-state impact — early "
+            "industrialisation pays less than the steady-state table suggests. "
+            "The net-growth pollution sensitivity isolates the effect: 100% "
             "pollution flattens net growth across the entire SoL range, and "
-            "0% versus 50% pollution costs about 0.8% at SoL 15."
+            "0% vs 50% pollution costs about 0.8% at SoL 15."
         ),
 
         "famine_title": "Famine and Recovery",
@@ -640,12 +644,11 @@ ANALYSIS_TEXT = {
             "advisable."
         ),
         "literacy_data_ref": (
-            "The data report's <a href=\"demography_report_en.html#net-literacy\">"
-            "net-growth literacy sensitivity chart</a> shows 0%–100% literacy "
-            "as five parallel curves offset by the birth-rate penalty. The "
-            "<a href=\"demography_report_en.html#wf-literacy\">workforce-ratio "
-            "counterpart</a> shows all five curves still converging to the same "
-            "50% target — literacy affects convergence speed, not the asymptote."
+            "The literacy sensitivity charts above show 0%–100% literacy as "
+            "five parallel net-growth curves offset by the birth-rate penalty; "
+            "on the workforce-ratio axis, all five still converge to the same "
+            "50% target — literacy affects convergence speed, not the "
+            "asymptote."
         ),
 
         "figures_pointer_title": "Raw Data",
@@ -753,8 +756,26 @@ ANALYSIS_TEXT = {
             "本报告分析 Victoria 3 中与人口及劳动力比例相关的若干玩法决策："
             "医疗法案的选择、通用食品公司的设立时机、劳动力比例的提升路径，"
             "以及工业化的人口代价。"
-            "所有数值结论均来自同目录下的 CSV 输出；"
-            "配套数据报告中列出完整的表格与图表。"
+            "所有数值结论均来自同目录下的 CSV 输出。"
+        ),
+        "base_section_title": "模型基础与默认场景",
+        "base_section_body": (
+            "基础出生率与死亡率是 SoL 的分段线性函数，定义于 "
+            "<code>game/common/defines/00_defines.txt</code>。"
+            "出生率在 SoL 10 以下保持最大值，之后线性下降至 SoL 25 触底；"
+            "死亡率在 SoL 0–15 区间陡降，随后缓降。"
+            "自然增长率在 SoL 15 附近达到峰值。"
+        ),
+        "scenarios_subtitle": "默认场景",
+        "modifier_section_title": "参考：修正源扫描",
+        "modifier_section_body": (
+            "<code>game/common</code> 下与人口相关修正键的聚合命中："
+            "命中次数、涉及文件数、所赋值的最小值与最大值。"
+        ),
+        "dict_section_title": "数据字典",
+        "dict_section_body": (
+            "本报告所有表格与图表均由同目录下的 CSV 文件重新生成。"
+            "下面列出每个文件每一列的含义。"
         ),
 
         "health_title": "医疗法案的选择",
@@ -779,16 +800,13 @@ ANALYSIS_TEXT = {
             "公共医保研究完成后应替换。"
         ),
         "health_data_ref": (
-            "数据报告的<a href=\"demography_report_zh.html#net-healthcare\">"
-            "净增长 · 医疗制度敏感性图（0% 污染）</a>与"
-            "<a href=\"demography_report_zh.html#net-healthcare_pollution\">"
-            "50% 污染下的同图</a>把四套制度画在同一坐标系。"
+            "上面两张医疗制度敏感性图（0% 与 50% 污染）"
+            "把四套制度画在同一净增长坐标系。"
             "无污染时公共医保、私立、慈善在 SoL 16 以上几乎重合，"
             "净增长差距不到 0.1%；50% 污染下四条曲线在整段 SoL 区间拉开，"
             "公共医保始终在私立之上。"
-            "<a href=\"demography_report_zh.html#wf-healthcare\">"
-            "劳动力比例 · 医疗制度敏感性图</a>下，"
-            "医疗制度对比例本身影响有限，差异主要体现在总人口规模。"
+            "在劳动力比例轴上，医疗制度对比例本身影响有限，"
+            "差异主要体现在总人口规模。"
         ),
 
         "food_title": "通用食品公司",
@@ -802,12 +820,9 @@ ANALYSIS_TEXT = {
             "相对变化最大，倍数同样为 {mult_5}。"
         ),
         "food_data_ref": (
-            "数据报告的<a href=\"demography_report_zh.html#net-birth_multiplier\">"
-            "净增长 · 出生率乘数敏感性图</a>给出 ±10% 完整扫描。"
+            "上面的出生率乘数敏感性图给出 ±10% 完整扫描。"
             "+5% 曲线在 SoL 15 处读数 2.69%/年，基准 2.50%/年，差 +{delta_15}。"
             "SoL 25 以后所有曲线收敛于同一速率，因为基础出生率已触底。"
-            "<a href=\"demography_report_zh.html#wf-birth_multiplier\">"
-            "劳动力比例 · 出生率乘数敏感性图</a>下，同样 +5% 把从 25% 起步的收敛时间缩短约 4 年。"
         ),
 
         "ratio_title": "劳动力比例的提升路径",
@@ -841,24 +856,21 @@ ANALYSIS_TEXT = {
             "不宜以降低死亡率为代价牺牲出生率。"
         ),
         "ratio_data_ref_p1": (
-            "数据报告三张劳动力敏感性图直接支持上述结论。"
-            "<a href=\"demography_report_zh.html#wf-target_ratio\">劳动力比例 · 目标比例敏感性图</a>"
-            "的五条曲线分别收敛到 25 / 35 / 40 / 45 / 50%，每条渐近线即对应法律堆叠之和。"
+            "上面的目标比例敏感性图：五条曲线分别收敛到 25 / 35 / 40 / 45 / 50%，"
+            "每条渐近线即对应法律堆叠之和。"
             "出生率或 SoL 的变动不能跨过曲线自身的目标上限。"
         ),
         "ratio_data_ref_p2": (
-            "<a href=\"demography_report_zh.html#wf-sol\">劳动力比例 · SoL 敏感性图</a>"
-            "覆盖 SoL 5–25 共九条曲线。"
+            "SoL 敏感性图覆盖 SoL 5–25 共九条曲线。"
             "SoL 10、12 收敛最快，16 年内到 40%；"
             "SoL 5 滞后（基础死亡率与出生率持平），"
             "SoL 25 滞后（基础出生率触底）。"
             "收敛速度与 SoL 之间为非单调关系，最快区间在 SoL 10–12。"
         ),
         "ratio_data_ref_p3": (
-            "<a href=\"demography_report_zh.html#wf-birth_multiplier\">劳动力比例 · 出生率乘数敏感性图</a>"
-            "与<a href=\"demography_report_zh.html#wf-mortality_multiplier\">死亡率乘数敏感性图</a>"
-            "并列对比两条修正通道。出生率曲线在 5 年时间带内分散，死亡率曲线几乎重叠。"
-            "同页下方的<em>人口指数副图</em>显示，"
+            "出生率乘数与死亡率乘数敏感性图并列对比两条修正通道。"
+            "出生率曲线在 5 年时间带内分散，死亡率曲线几乎重叠。"
+            "下方的人口指数副图显示，"
             "+50% 死亡率几乎不动比例，但 100 年内把人口指数从约 1.5 拉到 0.6。"
             "出生率改变比例，死亡率改变人口规模。"
         ),
@@ -882,13 +894,12 @@ ANALYSIS_TEXT = {
             "公共医保的角色为损害控制而非根本解决。"
         ),
         "industry_data_ref": (
-            "数据报告的<a href=\"demography_report_zh.html#section-pollution\">污染节</a>"
-            "包含稳态参考表（污染生成、可耕地 → 长期 impact）与瞬态曲线。"
+            "上面的稳态参考表与瞬态曲线给出污染演化的两个角度。"
             "按引擎默认变化速率，从 0 涨到稳态的时间常数约 1000 月："
             "污染生成 2000 的州约需 50 年达到稳态 impact 的一半，"
             "因此开荒前 50 年的人口代价低于稳态值。"
-            "<a href=\"demography_report_zh.html#net-pollution\">净增长 · 污染敏感性图</a>"
-            "孤立出污染的影响：100% 污染下整段 SoL 区间的净增长曲线几乎被压平；"
+            "净增长污染敏感性显示，"
+            "100% 污染下整段 SoL 区间的净增长曲线几乎被压平；"
             "0% 与 50% 污染在 SoL 15 处相差约 0.8%。"
         ),
 
@@ -920,11 +931,9 @@ ANALYSIS_TEXT = {
             "因此不宜以压低识字率换取出生率提升。"
         ),
         "literacy_data_ref": (
-            "数据报告的<a href=\"demography_report_zh.html#net-literacy\">"
-            "净增长 · 识字率敏感性图</a>把 0%–100% 识字率画成五条几乎平行的曲线，"
-            "纵向间距对应出生率惩罚。"
-            "<a href=\"demography_report_zh.html#wf-literacy\">"
-            "劳动力比例 · 识字率敏感性图</a>下，五条曲线最终都收敛到 50% 目标，"
+            "上面的识字率敏感性图把 0%–100% 识字率画成五条几乎平行的净增长曲线，"
+            "纵向间距对应出生率惩罚；"
+            "劳动力比例轴上，五条曲线最终都收敛到 50% 目标，"
             "识字率影响收敛速度但不改变终点。"
         ),
 

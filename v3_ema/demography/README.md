@@ -29,7 +29,7 @@ above is the only supported invocation.
 | `i18n.py` | Local `LABEL_TRANSLATIONS_ZH`, `NOTE_TRANSLATIONS_ZH`, `REPORT_TEXT`, `ANALYSIS_TEXT`, `SENSITIVITY_GROUPS`, `SENSITIVITY_NOTES`. Keyed by `"en"` / `"zh"` so callers can pass `v3_ema.i18n.ui_lang_for(args.lang)` directly. |
 | `chart_svg.py` | `svg_line_chart`, `svg_bar_chart`, palettes. Series styling is decoupled from translated labels via the explicit `style_keys=` parameter (`STYLE_BASE` / `STYLE_BIRTH` / `STYLE_MORTALITY` / `STYLE_NATURAL_GROWTH`). |
 | `rows.py` | CSV row builders (`make_rates_rows`, `make_projection_rows`, `make_workforce_sensitivity_rows`, …) + a dict-row `write_csv` with float rounding to 6 decimals (configurable via `float_digits=`). |
-| `report.py` | HTML report templates. `build_html_report(language=…)` is the compact bilingual report; `build_analysis_report(language=…)` is the academic-style report. `workforce_chart_bounds(initial, target)` derives chart y-axis bounds from the projection inputs. Includes the quantitative limitations diff (skew on/off, dynamic SoL vs static). |
+| `report.py` | HTML report template. `build_analysis_report(language=…)` is the single merged report (all charts + analysis prose inline). `workforce_chart_bounds(initial, target)` derives chart y-axis bounds from the projection inputs. Includes the quantitative limitations diff (skew on/off, dynamic SoL vs static). |
 
 ## Tests
 

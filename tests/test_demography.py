@@ -435,16 +435,12 @@ def test_build_analysis_report_emits_both_languages() -> None:
     assert "food company" in en.lower()
     assert "劳动力比例的提升路径" in zh
     assert "工业化的人口代价" in zh
-    # Cross-cutting raw-data sections (scenario inputs, modifier scan, data
-    # dictionary) live in the companion data report — not as sections in the
-    # article. Substrings may still appear in the pointer paragraph that
-    # directs readers to the data report.
-    assert "<h2>场景定义</h2>" not in zh
-    assert "<h2>数据字典</h2>" not in zh
-    assert "<h2>Data Dictionary</h2>" not in en
-    # The article points readers to the data report.
-    assert "原始数据" in zh
-    assert "Raw Data" in en
+    # Single merged document: model basis + sensitivity charts + modifier scan
+    # + data dictionary all live inline as h2 sections.
+    assert "<h2>模型基础与默认场景</h2>" in zh
+    assert "<h2>Model Basis and Default Scenarios</h2>" in en
+    assert "<h2>数据字典</h2>" in zh
+    assert "<h2>Data Dictionary</h2>" in en
     # AI-flavored boxes should be gone.
     assert "TL;DR" not in en
     assert "速览" not in zh
