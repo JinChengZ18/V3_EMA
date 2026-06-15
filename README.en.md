@@ -131,8 +131,6 @@ Recolor **the game's own world map** by the numbers from the table — shade dep
 | **Wheat distribution** (`--crops` map, shaded by arable land) | |
 | ![wheat](docs/images/crop_building_wheat_farm.png) | |
 
-> Needs two extra deps (they don't affect other features): `python -m pip install "pillow>=10" "numpy>=1.24"` (or `pip install -e ".[map]"`).
-
 ```powershell
 # Default: a "total potential" PNG + an interactive HTML viewer (values labeled on tiles)
 python -m v3_ema regions map

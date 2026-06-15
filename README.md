@@ -133,8 +133,6 @@ python -m v3_ema regions report --lang braz_por  --out regions_bp.xlsx
 | **小麦分布**（`--crops` 农作物图，按可耕地深浅） | |
 | ![wheat](docs/images/crop_building_wheat_farm.png) | |
 
-> 需额外两个依赖（不影响其它功能）：`python -m pip install "pillow>=10" "numpy>=1.24"`（或 `pip install -e ".[map]"`）。
-
 ```powershell
 # 默认：画「总潜能」PNG + 交互式 HTML（深浅 = 资源量，地块标数值）
 python -m v3_ema regions map
