@@ -159,6 +159,12 @@ python -m v3_ema regions report --maps
 
 输出位置：`out/regions/maps/`（图集 PNG/SVG + 交互 HTML；`diffs/` 变化图、`national/` 国界版、`atlas/` Excel 素材、`showcase/` 高清·国界）。
 
+> **一键重生全部示例图**：上面所有命令与参数已打包成脚本，分桶输出到子目录——
+> ```bash
+> bash scripts/gen_maps.sh
+> ```
+> Windows 用 Git Bash 运行（命令都是 `python -m v3_ema …`，PowerShell 用户也可逐条复制）。可选 `PYTHON=py`、`GAME_ROOT="D:/Games/Victoria 3"` 覆盖。产物在 `out/`（git 忽略，仅本地查看）。
+
 - **PNG**：`map_<metric>.png`，中下方**艺术图例**（资源色块 + 大标题，缩略图也能一眼分辨是哪种资源），每块地标数值、描州界；字体取自游戏 ParadoxVictorian / Playfair / EB Garamond。
 - **交互式 HTML**：`resource_map.html` —— 单文件，浏览器打开即用：下拉切 14 图层、切配色、按大洲缩放、搜地区名、开关数值标注、悬停看「州名 + 数值」。
 - **矢量 SVG**（`--svg`，可配 `--all`）：高清栅格底图 + 矢量数值/图例，**内嵌游戏字体**（与 PNG 一致），缩放打印不糊。

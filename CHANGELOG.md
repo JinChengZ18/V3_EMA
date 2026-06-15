@@ -104,6 +104,7 @@ V3_EMA 的版本变更记录，遵循 [Keep a Changelog](https://keepachangelog.
 - 输出整理到 `out/regions/maps/`：图集 PNG/SVG + 交互 HTML 在顶层；`diffs/` 变化图、`crops/` 农作物、`atlas/` Excel 素材、`showcase/` 高清·国界分目录。
 - 根 `README.md` / `README.en.md`：地图并入「功能 2：地区资源统计与可视化」小节（2a 表格 + 2b 地图），并新增示例插图（`docs/images/`）。
 - **依赖管理**：新增 [requirements.txt](requirements.txt)（openpyxl / pillow / numpy / scipy），`pip install -r requirements.txt` 一键装齐；`pyproject` 的 `[map]` extra 同步加入 scipy（用于加粗国界，缺失时自动降级）。
+- **一键生成脚本** [scripts/gen_maps.sh](scripts/gen_maps.sh)：跑一遍功能 2b 全部命令/参数，分桶输出到 `out/regions/maps/`，README 已说明（Windows 用 Git Bash）。
 
 ---
 

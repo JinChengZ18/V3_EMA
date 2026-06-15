@@ -157,6 +157,12 @@ python -m v3_ema regions report --maps
 
 Output: `out/regions/maps/` (gallery PNG/SVG + interactive HTML; `diffs/` change maps, `national/` border versions, `atlas/` Excel sources, `showcase/` high-res · borders).
 
+> **Regenerate every example at once**: all the commands/options above are bundled into a script that buckets its output into subfolders —
+> ```bash
+> bash scripts/gen_maps.sh
+> ```
+> On Windows run it from Git Bash (the commands are plain `python -m v3_ema …`, so PowerShell users can copy them one by one too). Optional `PYTHON=py` / `GAME_ROOT="D:/Games/Victoria 3"` overrides. Outputs land in `out/` (git-ignored, local only).
+
 - **PNG**: `map_<metric>.png`, with a bottom-centre **artistic legend** (resource colour-chip + large title — identifiable even as a thumbnail), a value at each state's centre, and outlined borders; fonts from the game's ParadoxVictorian / Playfair / EB Garamond.
 - **Interactive HTML**: `resource_map.html` — single file, open in a browser: dropdowns for the 14 layers and colormap, continent zoom, state search, label toggle, hover for "state + value".
 - **Vector SVG** (`--svg`, combine with `--all`): high-res raster fill + vector labels/legend with the **game fonts embedded**, crisp at any zoom/print.
