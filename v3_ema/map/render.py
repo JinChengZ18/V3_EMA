@@ -505,7 +505,7 @@ def draw_legend(
     line_gap = round(big * 0.08)                      # tight title -> subtitle spacing
     row_w = chip + chip_gap + title_w
     block_h = big + line_gap + sub_size
-    ocx, ocy = round(w * 0.50), round(h * 0.84)       # south of Africa — open ocean on every map
+    ocx, ocy = round(w * 0.50), round(h * 0.90)       # deep in the southern ocean — clear of land on every map
     row_x = ocx - row_w // 2
     row_y = ocy - block_h // 2
     swd = max(2, round(big * 0.06))
@@ -643,7 +643,7 @@ def svg_legend(index: "ProvinceIndex", fill_img: Image.Image, title: str, subtit
     line_gap = round(big * 0.08)
     row_w = chip + chip_gap + title_w
     block_h = big + line_gap + sub_size
-    ocx, ocy = round(w * 0.50), round(h * 0.84)      # south of Africa — open ocean
+    ocx, ocy = round(w * 0.50), round(h * 0.90)      # deep in the southern ocean — clear of land
     row_x = ocx - row_w // 2
     row_y = ocy - block_h // 2
     swd = max(2, round(big * 0.06))
