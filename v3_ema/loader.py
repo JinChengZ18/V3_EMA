@@ -234,12 +234,21 @@ def _build_state_region(state_id: str, raw: dict[str, Any]) -> StateRegion:
         traits = []
 
     provinces_raw = raw.get("provinces", [])
-    if isinstance(provinces_raw, list):
-        province_count = len(provinces_raw)
-    elif isinstance(provinces_raw, str):
-        province_count = 1
-    else:
-        province_count = 0
+    if isinstance(provinces_raw, str):
+        provinces_raw = [provinces_raw]
+    elif not isinstance(provinces_raw, list):
+        provinces_raw = []
+    province_count = len(provinces_raw)
+    # Each token is a hex province color like "x0974E5" (quotes already stripped
+    # by the tokenizer). Convert to a 0xRRGGBB int for choropleth rendering;
+    # silently skip anything that isn't a valid hex color.
+    province_colors: list[int] = []
+    for tok in provinces_raw:
+        s = str(tok).strip().strip('"').lstrip("xX")
+        try:
+            province_colors.append(int(s, 16))
+        except ValueError:
+            continue
 
     naval_exit = raw.get("naval_exit_id")
     naval_exit_id = int(_to_float(naval_exit)) if naval_exit is not None else None
@@ -263,6 +272,7 @@ def _build_state_region(state_id: str, raw: dict[str, Any]) -> StateRegion:
         subsistence_building=str(subsist).strip('"') if subsist else None,
         naval_exit_id=naval_exit_id,
         province_count=province_count,
+        province_colors=province_colors,
     )
 
 

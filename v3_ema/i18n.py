@@ -180,6 +180,28 @@ _TRANSLATIONS: dict[str, dict[str, str]] = {
     "totals_label":           {"zh": "合计",         "en": "Total"},
     "pot_suffix":             {"zh": "（潜）",       "en": " (potential)"},
 
+    # --- Region resource map (choropleth) ---
+    "map_title":     {"zh": "地区资源地图", "en": "Regional Resource Map"},
+    "map_layer":     {"zh": "资源图层",     "en": "Resource layer"},
+    "map_colormap":  {"zh": "配色",         "en": "Colormap"},
+    "map_continent": {"zh": "大洲",         "en": "Continent"},
+    "map_search":    {"zh": "搜索地区…",    "en": "Search state…"},
+    "map_labels":    {"zh": "数值标注",     "en": "Labels"},
+    "map_reset":     {"zh": "全图",         "en": "Reset"},
+    "map_world":     {"zh": "全世界",       "en": "World"},
+    "map_nodata":    {"zh": "无此资源",     "en": "no data"},
+    "map_water":     {"zh": "海洋/湖泊",    "en": "water"},
+    "map_change":    {"zh": "资源变化",     "en": "Resource Change"},
+    "map_increase":  {"zh": "增加",         "en": "increase"},
+    "map_decrease":  {"zh": "减少",         "en": "decrease"},
+    "map_sheet":     {"zh": "资源地图",     "en": "Resource Maps"},
+    "map_timeline_title": {"zh": "资源时间线", "en": "Resource Timeline"},
+    "map_mode":      {"zh": "模式",         "en": "Mode"},
+    "map_version":   {"zh": "版本",         "en": "Version"},
+    "map_mode_abs":  {"zh": "绝对值",       "en": "Absolute"},
+    "map_mode_prev": {"zh": "Δ 较上版",     "en": "Δ vs previous"},
+    "map_mode_first":{"zh": "Δ 较首版",     "en": "Δ vs first"},
+
     # Region report bucket sheet names by continent
     "rbucket_western_europe":  {"zh": "西欧",       "en": "Western Europe"},
     "rbucket_southern_europe": {"zh": "南欧",       "en": "Southern Europe"},

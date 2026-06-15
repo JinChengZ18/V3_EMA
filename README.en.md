@@ -24,13 +24,13 @@ Put the `V3_EMA` folder wherever you like (**no longer required to be inside the
 
 ### Step 2: Install Python and dependencies
 
-Requires Python ≥ 3.10. Open PowerShell in the V3_EMA folder:
+Requires Python ≥ 3.10. Open PowerShell in the V3_EMA folder and install everything at once:
 
 ```powershell
-python -m pip install openpyxl
+python -m pip install -r requirements.txt
 ```
 
-Just one dependency (`openpyxl`, for writing Excel).
+What each is for: `openpyxl` (Excel reports — all features), `pillow` + `numpy` (Feature 2's map rendering), `scipy` (thicken map national borders — optional, degrades gracefully). If you only want the tables, `pip install openpyxl` is enough.
 
 ### Step 3: First run — locating the game
 
@@ -88,7 +88,11 @@ Output location: `V3_EMA\out\buildings\{reports,diffs}\`.
 
 The report has 12 sheets: Info / Overview / Agriculture / Plantations / Extraction / Manufacturing / Service / Infrastructure / Government / Military / Monuments / Construction Sectors. Each row's core fields: Building / Base-Secondary-Automation PM / Output Value / Input Value / Profit / Construction / Employment / Wage Multiplier / Construction ROI / Annual Per-Capita Profit. The diff workbook has 6 sheets (Added-Combo / Removed-Combo / Changed-Combo and the construction-sector counterparts); changed metric columns appear as `Old / New / Δ` triples with auto green/red coloring on Δ.
 
-### Feature 2: State-Region Resource Statistics
+### Feature 2: State-Region Resources (Table & Maps)
+
+Regional resources come in two forms: a **statistics table** (Excel) and **map visualization** (PNG/SVG/interactive HTML) — the latter is a natural extension of the former, painting the same data onto the game map.
+
+#### 2a · Resource statistics table
 
 ```powershell
 # Generate for the current version (Chinese UI by default)
@@ -114,6 +118,53 @@ python -m v3_ema regions report --lang braz_por  --out regions_bp.xlsx
 Output location: `V3_EMA\out\regions\{reports,diffs}\`.
 
 The report buckets states into 14 continent groups (Western Europe / Southern Europe / Northern Europe / Eastern Europe / North America / Central America / South America / Africa / Middle East / Central Asia / India / East Asia / Southeast Asia / Oceania). **Row 2 is a totals row** (sum of all states' resources within the bucket). Each row's core fields: State / Strategic Region / Arable Land / Arable Buildings / Capped Total / **per-resource columns** (Iron Mine / Coal Mine / Logging Camp / Oil Rig / etc., easy to sort & compare) / Total Capacity / State Traits.
+
+#### 2b · Resource map (visualization)
+
+Recolor **the game's own world map** by the numbers from the table — shade depth = resource amount — with the value printed at each state's centre. The technique is the standard Paradox "indexed province color → lookup-table recolor". Colors and fonts come from the game's own assets (Victorian style); images render in English.
+
+| Resource choropleth (iron · auto colour + labels + legend) | Cross-version change map (red = cut, green = grew) |
+| --- | --- |
+| ![iron](docs/images/map_building_iron_mine.png) | ![diff](docs/images/map_diff_building_coal_mine_v1.8.7_to_v1.13.4.png) |
+| **Total potential + 1836 national borders** (micro-states skipped) | **Gold** (gold fields merged in, amber palette) |
+| ![total](docs/images/map_total_capacity.png) | ![gold](docs/images/map_building_gold_mine.png) |
+| **Wheat distribution** (`--crops` map, shaded by arable land) | |
+| ![wheat](docs/images/crop_building_wheat_farm.png) | |
+
+> Needs two extra deps (they don't affect other features): `python -m pip install "pillow>=10" "numpy>=1.24"` (or `pip install -e ".[map]"`).
+
+```powershell
+# Default: a "total potential" PNG + an interactive HTML viewer (values labeled on tiles)
+python -m v3_ema regions map
+
+# A single layer (any resource building id or aggregate); auto per-resource color by default
+python -m v3_ema regions map --metric building_iron_mine     # iron → steel blue
+python -m v3_ema regions map --all --svg                     # all 14 layers, each with a vector SVG
+python -m v3_ema regions map --crops                         # 16 crop-distribution maps → maps/crops/
+
+# National borders / high-res / vector
+python -m v3_ema regions map --metric total_capacity --countries                              # overlay 1836 borders (drops tribes)
+python -m v3_ema regions map --metric total_capacity --countries --country-filter recognized  # great-power-recognized only
+python -m v3_ema regions map --metric building_iron_mine --full-res                           # native 8192px
+
+# Cross-version change map (red down / green up; reuses two Feature-2 reports)
+python -m v3_ema regions map-diff baseline_regions_v1.8.7.xlsx baseline_regions_v1.13.4.xlsx --metric building_coal_mine
+
+# Multi-version timeline viewer (version slider + Δ-change)
+python -m v3_ema regions map-timeline baseline_regions_v1.8.7.xlsx baseline_regions_v1.13.4.xlsx
+
+# Embed the maps straight into the Excel report above (adds a "Resource Maps" sheet)
+python -m v3_ema regions report --maps
+```
+
+Output: `out/regions/maps/` (gallery PNG/SVG + interactive HTML; `diffs/` change maps, `national/` border versions, `atlas/` Excel sources, `showcase/` high-res · borders).
+
+- **PNG**: `map_<metric>.png`, with a bottom-centre **artistic legend** (resource colour-chip + large title — identifiable even as a thumbnail), a value at each state's centre, and outlined borders; fonts from the game's ParadoxVictorian / Playfair / EB Garamond.
+- **Interactive HTML**: `resource_map.html` — single file, open in a browser: dropdowns for the 14 layers and colormap, continent zoom, state search, label toggle, hover for "state + value".
+- **Vector SVG** (`--svg`, combine with `--all`): high-res raster fill + vector labels/legend with the **game fonts embedded**, crisp at any zoom/print.
+- **National borders** (`--countries`): `--country-filter civilized` (default, drops tribal/decentralized polities but keeps China/Japan/Persia) / `recognized` (great-power-recognized only) / `all`; `--min-country-provinces N` (default 8) trims by size.
+- **Crop distribution** (`--crops`): from each state's `arable_resources`, 16 crop maps (wheat/rice/cotton/tobacco/vineyard/sugar/coffee/tea/silk/dye/opium…) showing the crop's growable range shaded by arable land, into `maps/crops/`; the interactive HTML also includes these crop layers (30 total).
+- **Colormaps** (`--cmap`): `auto` (default) gives each resource/crop a mnemonic hue (coal=charcoal, iron=steel-blue, gold=amber …; wheat=golden, rice=paddy-green, cotton=grey-tan …), light→dark = few→many; or force `viridis`/`magma`/single-hue `blues`/`greens`/… . `--gamma` (default 0.7) boosts depth contrast.
 
 ### Feature 3: Pop-Growth & Workforce-Ratio Analysis
 
@@ -145,8 +196,7 @@ Output location: `V3_EMA\out\demography\`.
 
 Per run (default `--ui-lang both`):
 
-- `demography_report_{en,zh}.html` — compact chart + data report
-- `demography_analysis_report_{en,zh}.html` — academic-style analysis report (base curves, sensitivities, controlled healthcare comparison, quantitative limitations)
+- `demography_report_{en,zh}.html` — single merged report: academic-style analysis narrative (base curves, sensitivities, controlled healthcare comparison, method limits) plus all charts, scenario tables, and the data dictionary inline
 - `rates_by_sol.csv` — birth / mortality / net growth by SoL × scenario
 - `net_growth_sensitivity.csv` — one-factor-at-a-time net-growth sensitivities
 - `workforce_projection.csv` — 100-year workforce-ratio and population trajectories per scenario

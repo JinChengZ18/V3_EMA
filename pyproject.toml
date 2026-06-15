@@ -1,6 +1,6 @@
 [project]
 name = "v3_ema"
-version = "0.4.0"
+version = "0.5.0"
 description = "Victoria 3 Econometrics Automation (V3_EMA): parses game script data and produces an Excel report of building/production-method economics."
 requires-python = ">=3.10"
 dependencies = [
@@ -9,6 +9,9 @@ dependencies = [
 
 [project.optional-dependencies]
 pandas = ["pandas>=2.0"]
+# Resource choropleth maps (`regions map`): recolor provinces.png by per-state value.
+# scipy is optional within this extra (only thickens national borders; degrades gracefully).
+map = ["pillow>=10", "numpy>=1.24", "scipy>=1.10"]
 
 [project.scripts]
 v3-ema = "v3_ema.cli:main"

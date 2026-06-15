@@ -201,6 +201,30 @@ def _write_regions_sheet(
         ws.freeze_panes = f"{anchor_col}3"
 
 
+def _write_maps_sheet(wb: Workbook, ui: UI, images: list[tuple[str, Path]]) -> None:
+    """Embed pre-rendered choropleth PNGs into a single 'Resource Maps' sheet,
+    stacked vertically with a bold label above each."""
+    from openpyxl.drawing.image import Image as XLImage
+
+    ws = wb.create_sheet(ui["map_sheet"])
+    ws.sheet_view.showGridLines = False
+    ws.column_dimensions["A"].width = 18
+    r = 1
+    for label, img_path in images:
+        if not img_path.exists():
+            continue
+        c = ws.cell(row=r, column=1, value=label)
+        c.font = Font(name=FONT_FAMILY, size=12, bold=True, color=TEXT_PRIMARY)
+        c.alignment = LEFT
+        try:
+            xim = XLImage(str(img_path))
+        except Exception:  # pragma: no cover - missing PIL/decoder
+            continue
+        ws.add_image(xim, f"A{r + 1}")
+        # ~18 px per default row; leave the image's height plus a gap.
+        r += int(getattr(xim, "height", 600) / 18) + 4
+
+
 def write_regions_xlsx(
     rows: Iterable[RegionRow],
     path: Path,
@@ -208,6 +232,7 @@ def write_regions_xlsx(
     meta: ReportMeta | None = None,
     ui: UI | None = None,
     game: GameData | None = None,
+    map_images: list[tuple[str, Path]] | None = None,
 ) -> int:
     _patch_writer_classifiers()
     rows_list = list(rows)
@@ -268,6 +293,9 @@ def write_regions_xlsx(
         # arable land doesn't matter much in early game).
         bucket_rows.sort(key=lambda r: r.capped_total, reverse=True)
         _write_regions_sheet(wb, ui[f"rbucket_{bucket}"], bucket_rows, ui, **sheet_kwargs)
+
+    if map_images:
+        _write_maps_sheet(wb, ui, map_images)
 
     wb.properties.title = f"V3_EMA Regions Report — V3 {meta.raw_version or '?'}"
     wb.properties.creator = "V3_EMA"

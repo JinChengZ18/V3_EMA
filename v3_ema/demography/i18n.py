@@ -13,7 +13,7 @@ LABEL_TRANSLATIONS_ZH = {
     "Women's suffrage + trade unions": "妇女选举 + 工会特质",
     "Pollution impact 50%": "污染影响 50%",
     "Pollution 100% + public health": "污染 100% + 公共医保",
-    "Private health, wealth 20": "私人医保，财富 20",
+    "Private health, wealth 20": "私立医疗，财富 20",
     "No health system": "无医疗制度",
     "Charitable health": "慈善医院",
     "Public health": "公共医保",
@@ -21,7 +21,7 @@ LABEL_TRANSLATIONS_ZH = {
     "No health + pollution 50%": "无医疗 + 污染 50%",
     "Charitable health + pollution 50%": "慈善医院 + 污染 50%",
     "Public health + pollution 50%": "公共医保 + 污染 50%",
-    "Private health + pollution 50%": "私人医保 + 污染 50%",
+    "Private health + pollution 50%": "私立医疗 + 污染 50%",
     "Starvation (partial)": "饥荒（部分）",
     "Severe starvation": "严重饥荒",
     "Base": "基准",
@@ -68,7 +68,7 @@ NOTE_TRANSLATIONS_ZH = {
     "Women's suffrage + trade unions": "妇女选举 +15%，叠加两个工会特质各 +5%；出生率 -5%。",
     "Pollution impact 50%": "state_region_pollution_health 按 50% 污染影响缩放：SoL -1.5，死亡率乘数 +25%。",
     "Pollution 100% + public health": "公共医保：死亡率 -5%，污染健康影响减少 15%。",
-    "Private health, wealth 20": "私人医保：state_mortality_wealth_mult = -0.002，按财富点数缩放。",
+    "Private health, wealth 20": "私立医疗：state_mortality_wealth_mult = -0.002，按财富点数缩放。",
     "No health system": "医疗制度控制组。",
     "Charitable health": "慈善医院：死亡率 -3%，污染健康影响减少 10%。",
     "Public health": "公共医保：死亡率 -5%，污染健康影响减少 15%。",
@@ -138,7 +138,7 @@ REPORT_TEXT = {
         "dict_col_column": "Column",
         "dict_col_meaning": "Meaning",
         "chart_appendix_title": "Victoria 3 — Demography Data Report",
-        "chart_appendix_intro": "Raw data report. Every CSV in this directory is mirrored here as a table or figure. Numbers regenerate with each game version. The narrative analysis is in the companion file <code>demography_analysis_report_en.html</code>.",
+        "chart_appendix_intro": "Raw data and figure report. Every CSV in this directory is mirrored here as a table or figure. Numbers regenerate with each game version and run configuration.",
         "section_base_charts": "Base population curves",
         "section_scenarios_table": "Scenario definitions",
         "section_net_charts": "Net growth — scenarios and sensitivity",
@@ -149,9 +149,9 @@ REPORT_TEXT = {
     },
     "zh": {
         "html_lang": "zh-CN",
-        "title": "维多利亚3人口与劳动力分析",
+        "title": "维多利亚 3 人口与劳动力数据报告",
         "game_root": "游戏目录",
-        "intro": "本报告把游戏暴露出的基础人口增长曲线与各类修正通道分开处理：识字率、污染健康影响、法律与公司修正、动乱、按财富缩放的死亡率等。年度百分比按游戏月率乘以 12 计算。",
+        "intro": "本报告把游戏脚本暴露出的基础人口增长曲线与各类修正通道分开处理，包括识字率、污染健康影响、法律与公司修正、动乱以及按财富缩放的死亡率等。年度百分比按游戏月率乘以 12 计算。",
         "formula_title": "有效公式",
         "base_title": "基础出生率、死亡率与自然增长率",
         "base_chart": "按 SoL 绘制的基础年度出生率、死亡率与自然增长率",
@@ -159,10 +159,10 @@ REPORT_TEXT = {
         "net_note": "概览图不再绘制那些人口增长效果只体现为出生率乘数的劳动力法律线；这些效果在下方单独展开。由于严重饥荒是明显负向离群值，y 轴使用对称对数坐标，并标出 0% 基线。",
         "net_chart": "按 SoL 绘制的年度自然增长率",
         "net_sensitivity_title": "自然增长敏感性分析",
-        "net_sensitivity_intro": "这些图按 SoL 展开，一次只隔离一个人口增长修正通道，方便横向比较。",
+        "net_sensitivity_intro": "这些图沿 SoL 维度展开，每次只隔离一个人口增长修正通道，便于横向比较方向和幅度。",
         "workforce_title": "劳动力比例投影",
         "workforce_chart": "近似劳动力比例收敛",
-        "workforce_note": "投影使用 SoL {sol:g} 下可见的月出生率和死亡率，并把所有场景放在同一条 {initial} 到 {target} 的劳动力比例路径上比较。引擎内部还存在由 WORKING_ADULT_RATIO_SKEW_MAXIMUM 控制的偏移修正；这一步没有暴露在脚本文件中。",
+        "workforce_note": "投影使用 SoL {sol:g} 下可见的月出生率和死亡率，并把所有场景放在同一条从 {initial} 到 {target} 的劳动力比例路径上比较。引擎内部还存在由 WORKING_ADULT_RATIO_SKEW_MAXIMUM 控制的偏移修正；这一步没有暴露在脚本文件中。",
         "sensitivity_title": "劳动力比例敏感性分析",
         "sensitivity_intro": "下面的图一次只隔离一个因素，在相同初始人口、SoL 与投影窗口下比较，便于看清每种因素的方向与相对强度。",
         "style_note": "连续数值敏感性图使用统一实线和科研 colormap 风格配色；基准线保留为更粗的黑色参考线。",
@@ -189,12 +189,12 @@ REPORT_TEXT = {
         "min": "最小值",
         "max": "最大值",
         "pollution_steady_title": "污染 · 稳态参考",
-        "pollution_steady_note": "引擎公式：impact = clamp(generated_pollution / (50 + 1.5·√arable) / 255, 0, 1)。表示长期稳定生产某污染量、可耕地某规模时的稳态 impact。",
+        "pollution_steady_note": "引擎公式：impact = clamp(generated_pollution / (50 + 1.5·√arable) / 255, 0, 1)。该值表示在给定可耕地规模与持续污染生成量下，州长期收敛到的稳态污染 impact。",
         "pollution_steady_col_gen": "污染生成",
         "pollution_steady_col_arable": "可耕地",
         "pollution_steady_col_impact": "稳态 impact",
         "pollution_dynamics_title": "污染 · 瞬态演化",
-        "pollution_dynamics_note": "月度递推：impact[t+1] = impact[t] + (target − impact[t]) · 0.255 / 255。按默认常数每月约 0.001 的步进，指数逼近的时间常数接近 1000 月。",
+        "pollution_dynamics_note": "月度递推：impact[t+1] = impact[t] + (target − impact[t]) · 0.255 / 255。按默认常数计算，每月步进约为 0.001，指数逼近的时间常数接近 1000 月。",
         "pollution_dynamics_chart": "持续生成下的污染 impact 瞬态演化",
         "dict_title": "数据字典",
         "dict_note": "所有图表都从同目录下的 CSV 重生成。下面列出每个文件每一列的含义。",
@@ -202,7 +202,7 @@ REPORT_TEXT = {
         "dict_col_column": "列",
         "dict_col_meaning": "含义",
         "chart_appendix_title": "维多利亚 3 — 人口数据报告",
-        "chart_appendix_intro": "原始数据报告。同目录下的每个 CSV 都对应到本文档中的表格或图表，所有数值随每个游戏版本重新生成。分析正文位于配套文件 <code>demography_analysis_report_zh.html</code>。",
+        "chart_appendix_intro": "原始数据与图表报告。同目录下的每个 CSV 都对应到本文档中的表格或图表，所有数值会随游戏版本和运行参数重新生成。",
         "section_base_charts": "基础人口曲线",
         "section_scenarios_table": "场景定义",
         "section_net_charts": "净增长 · 场景与敏感性",
@@ -428,10 +428,10 @@ ANALYSIS_TEXT = {
         "html_lang": "en",
         "title": "Victoria 3 — Population and Workforce Mechanics: An Analysis",
         "source_line": (
-            "Data source: {game_root}. This document is the narrative; "
-            "the companion file <code>demography_report_en.html</code> in the "
-            "same directory holds all raw data tables and figures, which "
-            "regenerate with each game version."
+            "Data source: {game_root}. This is a single merged report: "
+            "narrative, figures, scenario tables, and the data dictionary are "
+            "generated from the CSV outputs in this directory and update with "
+            "game version, run configuration, and parsed script data."
         ),
         "intro_title": "Overview",
         "intro_body": (
@@ -653,12 +653,11 @@ ANALYSIS_TEXT = {
 
         "figures_pointer_title": "Raw Data",
         "figures_pointer_body": (
-            "The complete set of raw data tables (scenario inputs, modifier "
-            "scan, pollution steady state, data dictionary) and the full "
-            "figure set is in the companion file "
-            "<code>demography_report_en.html</code> in this directory. Both "
-            "files regenerate from the same CSVs and therefore change with "
-            "each game version."
+            "Scenario inputs, modifier scans, pollution steady-state tables, "
+            "the data dictionary, and the full figure set are embedded in this "
+            "report and regenerated from the CSV files in the same directory. "
+            "They therefore change with game version, parsed script data, and "
+            "run configuration."
         ),
 
         "limits_title": "Method Limits",
@@ -668,15 +667,17 @@ ANALYSIS_TEXT = {
             "(maximum factor 2.0) lacks a documented script-side algorithm. "
             "This report approximates it with "
             "<code>skew = clamp(target / current, 1/2, 2)</code>; the "
-            "divergence from the no-correction baseline is small and is "
-            "quantified in the data report.</li>"
+            "approximation captures the direction of dependent-weighted "
+            "mortality when the current ratio is below target, but cannot "
+            "guarantee step-for-step equivalence with the engine's internal "
+            "C++ implementation.</li>"
             "<li>SoL is held constant within each projection. In live game "
             "play SoL drifts with industrialisation, literacy and commodity "
             "prices. The CLI flags <code>--sol-start / --sol-end</code> "
             "enable a linear-trajectory mode.</li>"
             "<li>Pollution is modelled at steady state. The ramp from zero "
             "to steady state has a time constant near 1000 months (see the "
-            "pollution-dynamics chart in the data report); early "
+            "pollution-dynamics chart in this report); early "
             "industrialisation pays less than the steady-state numbers "
             "imply.</li>"
             "<li>Private Health's wealth uses a 1.5 × SoL proxy. In game, "
@@ -744,27 +745,28 @@ ANALYSIS_TEXT = {
     },
     "zh": {
         "html_lang": "zh-CN",
-        "title": "维多利亚 3 — 人口与劳动力机制分析",
+        "title": "维多利亚 3：人口与劳动力机制分析",
         "source_line": (
-            "数据来源：{game_root}。本文为分析正文；"
-            "完整原始数据表与图表位于同目录下的配套文件 "
-            "<code>demography_report_zh.html</code>，"
-            "其内容随游戏版本变化而重新生成。"
+            "数据来源：{game_root}。本文为单文件合并报告："
+            "正文、图表、场景表与数据字典均由同目录下的 CSV 输出生成；"
+            "数值会随游戏版本、运行参数和脚本解析结果同步更新。"
         ),
         "intro_title": "概述",
         "intro_body": (
-            "本报告分析 Victoria 3 中与人口及劳动力比例相关的若干玩法决策："
-            "医疗法案的选择、通用食品公司的设立时机、劳动力比例的提升路径，"
-            "以及工业化的人口代价。"
-            "所有数值结论均来自同目录下的 CSV 输出。"
+            "本报告围绕 Victoria 3 中人口增长与劳动力比例两个核心问题，"
+            "分析医疗制度、通用食品公司、女权与工会带来的劳动力比例上限、"
+            "污染、饥荒和识字率等因素的作用路径。"
+            "所有数值结论均由同目录下的 CSV 输出重算得到；"
+            "正文侧重解释机制、比较方向、适用边界和可能的策略取舍。"
         ),
         "base_section_title": "模型基础与默认场景",
         "base_section_body": (
-            "基础出生率与死亡率是 SoL 的分段线性函数，定义于 "
+            "基础出生率与死亡率是生活水平（SoL）的分段线性函数，定义于 "
             "<code>game/common/defines/00_defines.txt</code>。"
             "出生率在 SoL 10 以下保持最大值，之后线性下降至 SoL 25 触底；"
             "死亡率在 SoL 0–15 区间陡降，随后缓降。"
-            "自然增长率在 SoL 15 附近达到峰值。"
+            "因此自然增长率并不会随 SoL 单调上升，而是在 SoL 15 附近达到峰值。"
+            "这组曲线是后续所有修正的基准，但并不等同于完整引擎中的人口模拟。"
         ),
         "scenarios_subtitle": "默认场景",
         "modifier_section_title": "参考：修正源扫描",
@@ -780,49 +782,52 @@ ANALYSIS_TEXT = {
 
         "health_title": "医疗法案的选择",
         "health_body_p1": (
-            "公共医保对死亡率施加 −5% 的固定乘数，并对污染健康损害额外减少 15%。"
-            "慈善医院的对应数值为 −3% 与 −10%，两条通道均弱于公共医保。"
-            "私立医疗使用按财富缩放的死亡率通道（系数 −0.002）；"
-            "在「财富 = 1.5 × SoL」的线性近似下，"
-            "其死亡率减免需 SoL 不低于 {breakeven_sol} 才能与公共医保相当。"
+            "公共医保提供固定死亡率减免（−5%）和额外的污染健康影响减免（−15%）。"
+            "慈善医院也作用于这两条通道，但幅度较小：死亡率 −3%、污染健康影响 −10%。"
+            "私立医疗没有固定死亡率减免，而是通过财富缩放的死亡率通道生效"
+            "（<code>state_mortality_wealth_mult = -0.002</code>）。"
+            "在「财富 = 1.5 × SoL」的线性代理下，"
+            "私立医疗需要 SoL 不低于 {breakeven_sol} 才能在死亡率通道上追平公共医保。"
         ),
         "health_body_p2": (
             "公共医保还会带来 +0.5 SoL 的全州加成。50% 污染冲击下，"
-            "+0.5 SoL 与 −15% 污染减免叠加使有效 SoL 仅净损 0.78；"
-            "私立医疗只有 −10% 污染减免，有效 SoL 净损 1.35。"
-            "SoL 20 时公共医保年死亡率为 {public_mort_50_sol20}，私立为 {private_mort_50_sol20}。"
-            "公共医保在 SoL 25 以下区间优于私立；只有州内 wealth 增速持续高于 SoL，"
-            "私立的 wealth-scaled 通道才可能追平。"
+            "+0.5 SoL 与 −15% 污染减免叠加后，有效 SoL 的净损约为 0.78；"
+            "私立医疗只有 −10% 污染减免，有效 SoL 净损约为 1.35。"
+            "以 SoL 20 为例，公共医保下年死亡率为 {public_mort_50_sol20}，"
+            "私立医疗为 {private_mort_50_sol20}。"
+            "在本报告采用的财富代理下，SoL 25 以下的大多数区间公共医保更稳健；"
+            "只有当州内实际财富显著高于 SoL 代理值时，私立医疗的财富缩放通道才可能接近或超过公共医保。"
         ),
         "health_body_p3": (
-            "慈善医院在药学研究完成前作为过渡选项。"
-            "其 −10% 的污染减免低于公共医保 5%，原始死亡率减免亦不及私立医疗，"
-            "公共医保研究完成后应替换。"
+            "慈善医院更适合作为制度与科技未完全展开时的过渡方案。"
+            "它能同时降低死亡率和污染健康影响，但幅度低于公共医保；"
+            "与私立医疗相比，它不依赖州内财富结构，因而在贫困州更可预期。"
+            "一旦公共医保可用且行政容量允许，慈善医院通常不再是长期最优解。"
         ),
         "health_data_ref": (
-            "上面两张医疗制度敏感性图（0% 与 50% 污染）"
-            "把四套制度画在同一净增长坐标系。"
-            "无污染时公共医保、私立、慈善在 SoL 16 以上几乎重合，"
-            "净增长差距不到 0.1%；50% 污染下四条曲线在整段 SoL 区间拉开，"
-            "公共医保始终在私立之上。"
-            "在劳动力比例轴上，医疗制度对比例本身影响有限，"
-            "差异主要体现在总人口规模。"
+            "医疗制度敏感性图把无污染与 50% 污染下的制度差异放在同一套净增长坐标中比较。"
+            "无污染时，公共医保、私立医疗与慈善医院在 SoL 16 以上的净增长率差距很小；"
+            "出现污染后，制度间差异明显扩大，公共医保的污染减免和 SoL 加成同时发挥作用。"
+            "在劳动力比例轴上，医疗制度对比例本身的影响较弱，"
+            "因为死亡率通常同时作用于分子和分母；它真正改变的是总人口规模、恢复能力和长期承载余量。"
         ),
 
         "food_title": "通用食品公司",
         "food_body_p1": (
             "通用食品公司的繁荣加成为 +5% 出生率乘数，"
-            "在公司繁荣后按月生效。百年累计效应："
+            "公司进入繁荣状态后按月生效。单年看，这一修正并不夸张；"
+            "但由于它直接作用于出生率，长期复利会把差距持续放大。百年累计效应显示："
             "SoL 15 下年净增长率提升 {delta_15}，"
             "100 年后州人口达到无公司情形的 {mult_15}；"
-            "SoL 10 因基础出生率仍处最大值，绝对收益更大，倍数 {mult_10}；"
-            "SoL 5 接近自然增长平衡点，0% 净增长被拉至 0.27%，"
-            "相对变化最大，倍数同样为 {mult_5}。"
+            "SoL 10 因基础出生率仍处于最大值，绝对收益更大，人口倍数为 {mult_10}；"
+            "SoL 5 接近自然增长平衡点，基准净增长接近 0%，"
+            "+5% 出生率会把净增长拉至正值，因此相对变化最醒目，人口倍数为 {mult_5}。"
         ),
         "food_data_ref": (
-            "上面的出生率乘数敏感性图给出 ±10% 完整扫描。"
+            "出生率乘数敏感性图给出 ±10% 的完整扫描。"
             "+5% 曲线在 SoL 15 处读数 2.69%/年，基准 2.50%/年，差 +{delta_15}。"
-            "SoL 25 以后所有曲线收敛于同一速率，因为基础出生率已触底。"
+            "SoL 25 以后所有曲线逐渐收敛，因为基础出生率已触底，"
+            "出生率乘数能够放大的基数随之变小。"
         ),
 
         "ratio_title": "劳动力比例的提升路径",
@@ -830,15 +835,15 @@ ANALYSIS_TEXT = {
             "长期上限为法律与特性贡献的工作年龄比例加成之和："
             "女性工作 +10%、妇女选举 +15%、"
             "工会两层特性各 +5%，在 25% 基础上累计 50%，"
-            "即模型的渐近线。"
+            "即本模型中从 25% 走向 50% 的渐近目标。"
         ),
         "ratio_body_p2": (
-            "劳动力比例的收敛速度由出生率主导。"
+            "劳动力比例的收敛速度主要由出生率通道决定。"
             "新生人口按目标比例分配至工作年龄，"
             "出生率越高，当前比例向目标的拉动越快。"
             "引擎附带工作年龄比例偏移修正（上限因子 2.0）："
             "当前比例低于目标时，死亡率向依赖人口倾斜，"
-            "等效将收敛速度再加倍。"
+            "等效地进一步加快比例向目标靠拢。"
         ),
         "ratio_body_p3": (
             "相同法律组合下，"
@@ -846,17 +851,21 @@ ANALYSIS_TEXT = {
             "SoL 15 需 {years_sol15} 年。"
             "SoL 12 的基础出生率（{birth_sol12}/年）"
             "较 SoL 15（{birth_sol15}/年）高约 25%，"
-            "比例收敛由出生率驱动。"
-            "劳动力比例优先时，SoL 应稳定在 10–12 区间。"
+            "因此比例收敛更快。"
+            "如果只以劳动力比例收敛为目标、暂不考虑产出和消费升级，"
+            "SoL 10–12 是较有利的区间；若目标转向人均产出、科研或财政，"
+            "更高 SoL 的综合收益仍可能压过人口结构上的速度损失。"
         ),
         "ratio_body_p4": (
             "通用食品公司的 +5% 出生率乘数可抵消选举法律的 −5% 出生率乘数，"
             "出生率通道净零的同时目标比例继续上升。"
             "死亡率乘数对劳动力比例本身影响有限（分子分母同向变化），"
-            "不宜以降低死亡率为代价牺牲出生率。"
+            "但它会显著改变总人口规模和恢复速度。"
+            "因此，若目标是提高劳动力占比，出生率修正通常更直接；"
+            "若目标是维持人口总量和抗冲击能力，死亡率修正仍然重要。"
         ),
         "ratio_data_ref_p1": (
-            "上面的目标比例敏感性图：五条曲线分别收敛到 25 / 35 / 40 / 45 / 50%，"
+            "目标比例敏感性图显示，五条曲线分别收敛到 25 / 35 / 40 / 45 / 50%，"
             "每条渐近线即对应法律堆叠之和。"
             "出生率或 SoL 的变动不能跨过曲线自身的目标上限。"
         ),
@@ -865,14 +874,14 @@ ANALYSIS_TEXT = {
             "SoL 10、12 收敛最快，16 年内到 40%；"
             "SoL 5 滞后（基础死亡率与出生率持平），"
             "SoL 25 滞后（基础出生率触底）。"
-            "收敛速度与 SoL 之间为非单调关系，最快区间在 SoL 10–12。"
+            "这说明收敛速度与 SoL 之间是非单调关系，最快区间集中在 SoL 10–12。"
         ),
         "ratio_data_ref_p3": (
             "出生率乘数与死亡率乘数敏感性图并列对比两条修正通道。"
             "出生率曲线在 5 年时间带内分散，死亡率曲线几乎重叠。"
             "下方的人口指数副图显示，"
             "+50% 死亡率几乎不动比例，但 100 年内把人口指数从约 1.5 拉到 0.6。"
-            "出生率改变比例，死亡率改变人口规模。"
+            "简言之，出生率更直接改变比例收敛，死亡率更直接改变人口规模。"
         ),
 
         "industry_title": "工业化的人口代价",
@@ -880,7 +889,8 @@ ANALYSIS_TEXT = {
             "污染通过两条通道削减人口：拉低有效 SoL（最多 −3）"
             "与提升死亡率乘数（最多 +50%）。"
             "两条通道均按当前医疗制度的污染健康减免乘数缩放。"
-            "下表为 SoL 14 起始州 80 年人口投影的对照："
+            "因此污染不是单纯的死亡率问题，也会通过有效生活水平影响出生率。"
+            "下表为 SoL 14 起始州在 80 年窗口内的人口投影对照："
         ),
         "industry_col_pollution": "污染",
         "industry_col_no_health": "无医疗（人口倍数）",
@@ -889,15 +899,17 @@ ANALYSIS_TEXT = {
         "industry_body_p2": (
             "50% 污染冲击下，州人口较 0% 污染情形减少 {loss_50}%，"
             "公共医保可挽回其中约 {uplift_50}，但缺口无法完全弥补。"
-            "工业核心州中，切换至林业 / 电气化生产方式及部署减污染建筑"
-            "较单纯依赖公共医保更为有效；"
-            "公共医保的角色为损害控制而非根本解决。"
+            "在工业核心州，切换低污染生产方式、推进电气化并部署减污染建筑，"
+            "通常比单纯依赖公共医保更能降低长期人口代价；"
+            "公共医保的角色更接近损害控制，而不是污染问题的根本解决。"
+            "如果州承担全国性工业集聚任务，这一代价可以被产出收益抵消，"
+            "但需要把人口承载、移民吸引力和医疗投入作为配套条件一起评估。"
         ),
         "industry_data_ref": (
-            "上面的稳态参考表与瞬态曲线给出污染演化的两个角度。"
+            "稳态参考表与瞬态曲线从两个角度描述污染演化。"
             "按引擎默认变化速率，从 0 涨到稳态的时间常数约 1000 月："
             "污染生成 2000 的州约需 50 年达到稳态 impact 的一半，"
-            "因此开荒前 50 年的人口代价低于稳态值。"
+            "因此新工业州前几十年的人口代价通常低于稳态测算值。"
             "净增长污染敏感性显示，"
             "100% 污染下整段 SoL 区间的净增长曲线几乎被压平；"
             "0% 与 50% 污染在 SoL 15 处相差约 0.8%。"
@@ -911,11 +923,13 @@ ANALYSIS_TEXT = {
             "严重饥荒惩罚（−90% / +100%）"
             "在相同条件下 5 年损失 {severe_loss}%，"
             "需约 {severe_recover} 年方能恢复，"
-            "在 30 年观察窗口内构成持久性人口损失。"
+            "在 30 年观察窗口内表现为持久性人口损失。"
         ),
         "famine_body_p2": (
-            "严重饥荒应在事件链完成前优先处理；"
-            "普通饥荒具备自愈能力，资源投入可适度降低。"
+            "严重饥荒应在事件链完成前优先处理，因为其损失不仅来自当期死亡，"
+            "还来自低出生率造成的长期人口缺口。"
+            "普通饥荒在本模型中具有一定恢复能力，但恢复速度仍取决于灾后 SoL、"
+            "迁徙、就业结构和后续医疗条件；若这些条件同时恶化，也可能演变为长期停滞。"
         ),
 
         "literacy_title": "识字率的隐性成本",
@@ -927,11 +941,13 @@ ANALYSIS_TEXT = {
             "SoL 15 由 {birth_15_lit0} 降至 {birth_15_lit1}，下降 {drop_15}%。"
         ),
         "literacy_body_p2": (
-            "与识字率带来的收益相比，该出生率损失影响有限，"
-            "因此不宜以压低识字率换取出生率提升。"
+            "这项出生率成本是真实存在的，但它通常小于识字率带来的生产率、科研、"
+            "政治参与和职业结构收益。"
+            "因此不宜为了维持出生率而主动压低识字率；更合理的做法是通过食品公司、"
+            "医疗制度和移民吸引力来对冲人口增速下降。"
         ),
         "literacy_data_ref": (
-            "上面的识字率敏感性图把 0%–100% 识字率画成五条几乎平行的净增长曲线，"
+            "识字率敏感性图把 0%–100% 识字率画成五条几乎平行的净增长曲线，"
             "纵向间距对应出生率惩罚；"
             "劳动力比例轴上，五条曲线最终都收敛到 50% 目标，"
             "识字率影响收敛速度但不改变终点。"
@@ -939,10 +955,9 @@ ANALYSIS_TEXT = {
 
         "figures_pointer_title": "原始数据",
         "figures_pointer_body": (
-            "完整原始数据表（场景定义、修正源扫描、污染稳态、数据字典）"
-            "及全部图表位于同目录下的配套文件 "
-            "<code>demography_report_zh.html</code>。"
-            "两份文件均自相同的 CSV 重生成，因此随每个游戏版本而变化。"
+            "场景定义、修正源扫描、污染稳态、数据字典及全部图表"
+            "已经内嵌在本报告中，并由同目录下的 CSV 文件重新生成。"
+            "因此，报告内容会随游戏版本、脚本数据和运行参数变化。"
         ),
 
         "limits_title": "方法局限",
@@ -951,19 +966,21 @@ ANALYSIS_TEXT = {
             "<li>引擎中的工作年龄比例偏移修正（上限因子 2.0）"
             "缺少完整的脚本侧公开算法。"
             "本文采用 <code>skew = clamp(target / current, 1/2, 2)</code> 近似；"
-            "其与无修正模型的差异较小，量化结果见配套数据报告。</li>"
+            "该近似能反映比例低于目标时依赖人口死亡权重更高的方向性，"
+            "但不能保证与引擎内部 C++ 实现逐步一致。</li>"
             "<li>SoL 在每次投影内为固定值；"
             "真实游戏中 SoL 随工业化、识字率与商品价格变化。"
             "CLI 选项 <code>--sol-start / --sol-end</code> 可启用线性轨迹模式。</li>"
             "<li>污染按稳态建模。真实污染从零到稳态的时间常数约为 1000 月"
-            "（参见配套数据报告中的污染瞬态曲线）；"
+            "（参见本报告中的污染瞬态曲线）；"
             "开荒期的人口代价低于稳态数值。</li>"
             "<li>私立医疗的财富估算采用 1.5 × SoL 线性映射。"
             "真实游戏中人口财富来自收入分布，"
             "高 SoL 富裕州可能高于该估计（私立效果更强），"
             "平民为主的州可能低于该估计。</li>"
-            "<li>未建模：迁徙与移民、奴隶 / 工程师 / 机械工的职业死亡率乘数、"
-            "地区特性（疫情、风暴）、阶层差异。</li>"
+            "<li>未建模：迁徙与移民、年龄队列、职业死亡率乘数、"
+            "地区特性（疫情、风暴）、阶层差异、战争伤亡、殖民地人口结构，"
+            "以及商品价格通过 SoL 反馈到出生率和死亡率的动态路径。</li>"
             "</ol>"
         ),
 
@@ -1006,15 +1023,16 @@ ANALYSIS_TEXT = {
         "ratio_initial_after": (
             "初始比例每提前 10%，到 40% 的时间缩短 7–10 年。"
             "法律堆叠仍是主导因素：起始 35% 但目标上限 35%（未通过妇女选举）"
-            "的州停在 35%。"
+            "的州不会越过 35% 的目标上限。"
         ),
         "ratio_birth_para": (
             "目标比例固定下，出生率乘数扫描显示 ±5 年的收敛带宽："
         ),
         "ratio_birth_after": (
-            "每 ±5% 的出生率乘数将到 40% 的时间挪动约 4 年。"
-            "单独开通用食品（+5%）带来的收敛收益约等于"
-            "再通过一档女权法律层级，因为该乘数在整个收敛窗口内复利。"
+            "出生率乘数每变化 ±5%，达到 40% 的时间大约前后移动 4 年。"
+            "通用食品公司繁荣（+5%）带来的收敛收益约等于"
+            "再通过一档会提高目标比例的女权法律层级，"
+            "因为出生率乘数会在整个收敛窗口内持续复利。"
         ),
     },
 }

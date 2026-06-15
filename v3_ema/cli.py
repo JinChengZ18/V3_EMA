@@ -55,6 +55,7 @@ DEFAULT_BUILDINGS_REPORTS_DIR = DEFAULT_OUT_DIR / "buildings" / "reports"
 DEFAULT_BUILDINGS_DIFFS_DIR = DEFAULT_OUT_DIR / "buildings" / "diffs"
 DEFAULT_REGIONS_REPORTS_DIR = DEFAULT_OUT_DIR / "regions" / "reports"
 DEFAULT_REGIONS_DIFFS_DIR = DEFAULT_OUT_DIR / "regions" / "diffs"
+DEFAULT_REGIONS_MAPS_DIR = DEFAULT_OUT_DIR / "regions" / "maps"
 DEFAULT_DEMOGRAPHY_DIR = DEFAULT_OUT_DIR / "demography"
 # Bundled baselines that ship with the project — let users diff right away
 # without having to first generate one for the previous game version.
@@ -297,7 +298,23 @@ def cmd_regions_report(args: argparse.Namespace) -> int:
             "strategic_regions": len(game.strategic_regions),
         },
     )
-    n = write_regions_xlsx(rows, out, meta=meta, ui=ui, game=game)
+    map_images = None
+    if getattr(args, "maps", False):
+        try:
+            from .map.writer import render_atlas_files
+            # Maps are rendered in English regardless of the report's --lang.
+            map_game = load(game_root, "english")
+            map_images = render_atlas_files(
+                map_game, game_root, get_ui("english"), DEFAULT_REGIONS_MAPS_DIR / "atlas",
+                metric_keys=args.maps_metric,
+                width=args.maps_width, labels=args.maps_labels,
+                version_label=map_game.version or map_game.raw_version or "",
+            )
+            log.info("Rendered %d maps to embed", len(map_images))
+        except ImportError as e:
+            log.error("--maps needs Pillow + numpy (%s); writing report without maps.", e)
+
+    n = write_regions_xlsx(rows, out, meta=meta, ui=ui, game=game, map_images=map_images)
     log.info("Wrote %d region rows (V3 %s, data=%s, ui=%s) -> %s",
              n, game.version or "?", args.lang, ui_lang, out)
     return 0
@@ -342,6 +359,139 @@ def cmd_regions_diff(args: argparse.Namespace) -> int:
     write_regions_diff_xlsx(diff, out, ui=ui)
     log.info("Wrote regions diff (ui=%s) -> %s", ui_lang, out)
     return 0
+
+
+def cmd_regions_map(args: argparse.Namespace) -> int:
+    """Render resource choropleth map(s) by recoloring the game province bitmap."""
+    try:
+        from .map.writer import generate  # lazy: keeps Pillow/numpy optional
+    except ImportError as e:
+        log.error("Map rendering needs Pillow and numpy: %s", e)
+        log.error('Install them with:  python -m pip install "v3_ema[map]"   '
+                  "(or: python -m pip install pillow numpy)")
+        return 2
+
+    game_root = _resolve_game_root(args)
+    if game_root is None:
+        return 2
+    # Map images are rendered in English regardless of --lang.
+    game = load(game_root, "english")
+    ui = get_ui("english")
+
+    out_dir: Path = args.out if args.out else DEFAULT_REGIONS_MAPS_DIR
+    width = 8192 if args.full_res else args.width
+
+    if args.crops:
+        from .map.writer import render_crop_maps
+        written = render_crop_maps(
+            game, game_root, ui, out_dir / "crops",
+            width=width, cmap=args.cmap, gamma=args.gamma, labels=args.labels,
+            borders=args.borders, grid=args.grid, national_borders=args.countries,
+            min_country_provinces=args.min_country_provinces, country_filter=args.country_filter,
+            svg=args.svg, version_label=game.version or game.raw_version or "",
+        )
+        if not written:
+            return 1
+        log.info("Wrote %d crop map file(s) -> %s", len(written), out_dir / "crops")
+        return 0
+
+    written = generate(
+        game, game_root, ui, out_dir,
+        metric_key=args.metric,
+        all_resources=args.all,
+        width=width,
+        cmap=args.cmap,
+        reverse=args.reverse,
+        clip_percentile=args.clip,
+        log_scale=args.log_scale,
+        gamma=args.gamma,
+        labels=args.labels,
+        borders=args.borders,
+        grid=args.grid,
+        national_borders=args.countries,
+        min_country_provinces=args.min_country_provinces,
+        country_filter=args.country_filter,
+        svg=args.svg,
+        fmt=args.format,
+        version_label=game.version or game.raw_version or "",
+        html_width=args.html_width,
+    )
+    if not written:
+        return 1
+    log.info("Wrote %d map file(s) (V3 %s, width=%d) -> %s",
+             len(written), game.version or "?", width, out_dir)
+    return 0
+
+
+def cmd_regions_map_diff(args: argparse.Namespace) -> int:
+    """Render a cross-version resource change map from two regions xlsx reports."""
+    try:
+        from .map.diff import generate_diff
+    except ImportError as e:
+        log.error("Map rendering needs Pillow and numpy: %s", e)
+        log.error('Install them with:  python -m pip install "v3_ema[map]"')
+        return 2
+
+    game_root = _resolve_game_root(args)
+    if game_root is None:
+        return 2
+    game = load(game_root, "english")     # rendered in English
+    ui = get_ui("english")
+
+    bases = (DEFAULT_REGIONS_REPORTS_DIR,)
+    old_path = _resolve_input_path(args.old, *bases)
+    new_path = _resolve_input_path(args.new, *bases)
+    if not old_path.exists():
+        log.error("Old regions report not found: %s", args.old)
+        return 2
+    if not new_path.exists():
+        log.error("New regions report not found: %s", args.new)
+        return 2
+
+    out_dir: Path = args.out if args.out else DEFAULT_REGIONS_MAPS_DIR / "diffs"
+    width = 8192 if args.full_res else args.width
+    path = generate_diff(
+        game, game_root, ui, old_path, new_path, out_dir,
+        metric_key=args.metric or "total_capacity",
+        width=width, clip_percentile=args.clip, labels=args.labels,
+        borders=args.borders, grid=args.grid,
+        national_borders=args.countries, min_country_provinces=args.min_country_provinces,
+        country_filter=args.country_filter, svg=args.svg,
+    )
+    return 0 if path else 1
+
+
+def cmd_regions_map_timeline(args: argparse.Namespace) -> int:
+    """Render an interactive multi-version timeline viewer from several reports."""
+    try:
+        from .map.timeline import generate_timeline
+    except ImportError as e:
+        log.error("Map rendering needs Pillow and numpy: %s", e)
+        return 2
+
+    game_root = _resolve_game_root(args)
+    if game_root is None:
+        return 2
+    game = load(game_root, "english")
+    ui = get_ui("english")
+
+    bases = (DEFAULT_REGIONS_REPORTS_DIR,)
+    paths: list[Path] = []
+    for r in args.reports:
+        p = _resolve_input_path(r, *bases)
+        if not p.exists():
+            log.error("Report not found: %s", r)
+            return 2
+        paths.append(p)
+
+    out_dir: Path = args.out if args.out else DEFAULT_REGIONS_MAPS_DIR
+    width = 8192 if args.full_res else args.width
+    path = generate_timeline(
+        game, game_root, ui, paths, out_dir,
+        include_current=args.current, width=width, clip_percentile=args.clip,
+        gamma=args.gamma,
+    )
+    return 0 if path else 1
 
 
 def _demography_languages(args: argparse.Namespace) -> list[str]:
@@ -640,6 +790,16 @@ def main(argv: list[str] | None = None) -> int:
     _add_common_args(p_rr)
     p_rr.add_argument("--out", type=Path, default=None,
                       help="Output filename. Default: report_regions_v<version>.xlsx")
+    p_rr.add_argument("--maps", action="store_true",
+                      help="Render resource choropleths and embed them as a 'Resource Maps' "
+                           "sheet in the workbook (needs pillow+numpy).")
+    p_rr.add_argument("--maps-metric", action="append", default=None,
+                      help="Restrict embedded maps to these metric keys (repeatable). "
+                           "Default: total potential + every resource.")
+    p_rr.add_argument("--maps-width", type=int, default=1200,
+                      help="Pixel width of embedded maps (default 1200).")
+    p_rr.add_argument("--maps-labels", action=argparse.BooleanOptionalAction, default=False,
+                      help="Draw value labels on embedded maps (default off for compactness).")
     p_rr.set_defaults(func=cmd_regions_report)
 
     p_rd = regions_sub.add_parser("diff", help="Compare two regions reports")
@@ -653,6 +813,127 @@ def main(argv: list[str] | None = None) -> int:
     p_rd.add_argument("--eps-abs", type=float, default=0.01)
     p_rd.add_argument("--eps-rel", type=float, default=0.005)
     p_rd.set_defaults(func=cmd_regions_diff)
+
+    p_rm = regions_sub.add_parser(
+        "map", help="Render resource choropleth map(s): PNG + interactive HTML viewer")
+    _add_common_args(p_rm)
+    p_rm.add_argument(
+        "--metric", default=None,
+        help="What to map: an aggregate (total_capacity | capped_total | arable_land | "
+             "resource_kinds) or a resource building id (e.g. building_iron_mine). "
+             "Default: total_capacity.")
+    p_rm.add_argument(
+        "--all", action="store_true",
+        help="Render one PNG per resource + every aggregate (into out/regions/maps/).")
+    p_rm.add_argument(
+        "--crops", action="store_true",
+        help="Render one map per arable crop (distribution × arable land) into "
+             "out/regions/maps/crops/.")
+    p_rm.add_argument(
+        "--width", type=int, default=2400,
+        help="Output width in px, downscaled from the 8192-wide source. Default 2400.")
+    p_rm.add_argument("--full-res", action="store_true",
+                      help="Export at the native 8192px width (overrides --width; high quality, slower).")
+    p_rm.add_argument("--borders", action=argparse.BooleanOptionalAction, default=True,
+                      help="Outline state regions + coastlines so tiles are easy to tell apart (default on).")
+    p_rm.add_argument("--grid", action=argparse.BooleanOptionalAction, default=False,
+                      help="Overlay a faint reference grid (note: pixel grid, not a true geographic graticule).")
+    p_rm.add_argument("--countries", action="store_true",
+                      help="Overlay 1836 national borders (thicker/darker than state outlines).")
+    p_rm.add_argument("--country-filter", choices=["civilized", "recognized", "all"], default="civilized",
+                      help="Which countries to outline with --countries: 'civilized' (default, drops "
+                           "decentralized tribal polities), 'recognized' (great-power-recognized only — "
+                           "drops China/Japan/Persia etc.), or 'all'.")
+    p_rm.add_argument("--min-country-provinces", type=int, default=8,
+                      help="When --countries: only outline countries owning >= N provinces "
+                           "(skips micro-states; default 8).")
+    p_rm.add_argument("--gamma", type=float, default=0.7,
+                      help="Depth contrast: <1 spreads low/mid values darker for clearer "
+                           "differentiation (default 0.7; 1.0 = linear).")
+    p_rm.add_argument("--svg", action="store_true",
+                      help="Also write an .svg per metric (high-res raster fill + crisp VECTOR "
+                           "labels/legend — sharp at any zoom/print size).")
+    p_rm.add_argument(
+        "--cmap", default="auto",
+        help="Colormap: 'auto' (default) gives each resource its own mnemonic hue "
+             "(coal=charcoal, iron=steel-blue, sulfur=yellow, gold=amber, …), "
+             "light→dark as amount grows. Or force one: viridis|magma|plasma|inferno|"
+             "blues|greens|reds|oranges|purples.")
+    p_rm.add_argument("--reverse", action="store_true", help="Reverse the colormap direction.")
+    p_rm.add_argument("--labels", action=argparse.BooleanOptionalAction, default=True,
+                      help="Draw each state's resource value on the map (default on; "
+                           "--no-labels to hide). Tiny states are skipped — raise --width.")
+    p_rm.add_argument(
+        "--clip", type=float, default=99.0,
+        help="Percentile at which to cap the color scale for contrast (default 99; "
+             "100 = use the true maximum).")
+    p_rm.add_argument(
+        "--log-scale", action="store_true",
+        help="Log-scale values before coloring (good for highly skewed resources).")
+    p_rm.add_argument("--format", choices=["png", "html", "both"], default="both",
+                      help="Output format. Default both (PNG for the metric + HTML viewer).")
+    p_rm.add_argument("--html-width", type=int, default=4096,
+                      help="Base-image resolution of the interactive HTML viewer (default 4096). "
+                           "Raise toward 8192 for crisper zoom (larger file); the canvas recolor is "
+                           "raster, so this trades sharpness for size. Per-layer --svg stays crisp at any zoom.")
+    p_rm.add_argument("--out", type=Path, default=None,
+                      help=f"Output directory. Default: {DEFAULT_REGIONS_MAPS_DIR}")
+    p_rm.set_defaults(func=cmd_regions_map)
+
+    p_rmd = regions_sub.add_parser(
+        "map-diff",
+        help="Render a cross-version resource CHANGE map (red=cut, green=grew) from two reports")
+    _add_common_args(p_rmd)
+    p_rmd.add_argument("old", type=Path, help="Older regions xlsx report (bundled baselines work)")
+    p_rmd.add_argument("new", type=Path, help="Newer regions xlsx report")
+    p_rmd.add_argument(
+        "--metric", default="total_capacity",
+        help="Aggregate (total_capacity|capped_total|arable_land|resource_kinds) or a "
+             "resource building id (e.g. building_iron_mine). Default total_capacity. "
+             "Note: resource columns are matched by localized name, so old/new/current "
+             "game should share --lang.")
+    p_rmd.add_argument("--width", type=int, default=2400, help="Output width in px. Default 2400.")
+    p_rmd.add_argument("--full-res", action="store_true",
+                       help="Export at the native 8192px width (overrides --width).")
+    p_rmd.add_argument("--clip", type=float, default=99.0,
+                       help="Percentile to cap the symmetric color scale (default 99).")
+    p_rmd.add_argument("--labels", action=argparse.BooleanOptionalAction, default=True,
+                       help="Draw signed deltas on each state (default on).")
+    p_rmd.add_argument("--borders", action=argparse.BooleanOptionalAction, default=True,
+                       help="Outline state regions + coastlines (default on).")
+    p_rmd.add_argument("--grid", action=argparse.BooleanOptionalAction, default=False,
+                       help="Overlay a faint reference grid (pixel grid, not geographic).")
+    p_rmd.add_argument("--countries", action="store_true",
+                       help="Overlay 1836 national borders.")
+    p_rmd.add_argument("--country-filter", choices=["civilized", "recognized", "all"], default="civilized",
+                       help="Which countries to outline with --countries (default civilized).")
+    p_rmd.add_argument("--min-country-provinces", type=int, default=8,
+                       help="With --countries: only outline countries owning >= N provinces (default 8).")
+    p_rmd.add_argument("--svg", action="store_true",
+                       help="Also write a vector .svg of the change map.")
+    p_rmd.add_argument("--out", type=Path, default=None,
+                       help=f"Output directory. Default: {DEFAULT_REGIONS_MAPS_DIR}")
+    p_rmd.set_defaults(func=cmd_regions_map_diff)
+
+    p_rmt = regions_sub.add_parser(
+        "map-timeline",
+        help="Interactive multi-version timeline viewer (version slider; absolute or Δ change)")
+    _add_common_args(p_rmt)
+    p_rmt.add_argument("reports", type=Path, nargs="+",
+                       help="Two+ regions xlsx reports, oldest first (bundled baselines work).")
+    p_rmt.add_argument("--current", action=argparse.BooleanOptionalAction, default=True,
+                       help="Append the live game as the latest version (default on).")
+    p_rmt.add_argument("--width", type=int, default=3200,
+                       help="Base image width in px (default 3200; larger = sharper but bigger HTML).")
+    p_rmt.add_argument("--full-res", action="store_true",
+                       help="Use the native 8192px base image (very large HTML).")
+    p_rmt.add_argument("--clip", type=float, default=99.0,
+                       help="Percentile to cap each version's color scale (default 99).")
+    p_rmt.add_argument("--gamma", type=float, default=0.7,
+                       help="Depth contrast for absolute mode (default 0.7).")
+    p_rmt.add_argument("--out", type=Path, default=None,
+                       help=f"Output directory. Default: {DEFAULT_REGIONS_MAPS_DIR}")
+    p_rmt.set_defaults(func=cmd_regions_map_timeline)
 
     # ---- demography namespace (nested subcommands) ----
     p_demo = sub.add_parser(

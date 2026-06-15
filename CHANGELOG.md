@@ -6,7 +6,7 @@ V3_EMA 的版本变更记录，遵循 [Keep a Changelog](https://keepachangelog.
 
 ---
 
-## [Unreleased] — 人口与劳动力分析整合进 v3_ema
+## [0.4.5] — 2026-06-01 — 人口与劳动力分析整合进 v3_ema
 
 ### 整合 (Integrated)
 
@@ -16,14 +16,21 @@ V3_EMA 的版本变更记录，遵循 [Keep a Changelog](https://keepachangelog.
 - **测试** `tests/test_demography.py` 的 36 个测试 import 全部改为 `v3_ema.demography.*`，全绿。
 - **输出位置不变**：仍写到 `V3_EMA/out/demography/`（沿用 `DEFAULT_OUT_DIR / "demography"`，与 `out/buildings/`、`out/regions/` 同构）。8 份 CSV 的 md5 整合前后 byte-exact 一致。
 
+### 报告 (Report)
+
+- **数据报告与分析报告合并为单文件**：过去每种语言产出两份 HTML（`demography_report_{lang}.html` 数据报告 + `demography_analysis_report_{lang}.html` 分析正文），现合并为单份 `demography_report_{lang}.html`，分析正文、全部图表、场景表与数据字典内联同一文档。`build_analysis_report(language=…)` 为合并后的唯一报告入口；CLI 运行时自动清理旧的 `demography_analysis_report_{lang}.html` 与重名 `demography_report.html`。
+- **i18n 文案随合并更新**：`REPORT_TEXT` / `ANALYSIS_TEXT` 移除「配套文件 / companion file」「见数据报告」等跨文件指向，统一改为「本报告」；`source_line`、`figures_pointer_body`、`limits` 等键同步改写，分析正文（医疗、通用食品、劳动力比例、工业污染、饥荒、识字率、方法局限）整体扩写。
+- **术语统一**：医疗法律的标签与注释将「私人医保」统一为「私立医疗」。
+
 ### 文档 (Docs)
 
 - 根 `README.md` 与 `README.en.md` 各加「功能 3 / Feature 3」一节，介绍 `v3-ema demography report` 用法、输出文件、`--scenarios-from`、`--sol-start/--sol-end`、`--no-skew` 等选项。
 - `v3_ema/demography/README.md` 改为面向贡献者的包内开发文档（模块表 + 模型注记），用户文档统一指向项目根 README。
+- 根 `README.md` / `README.en.md` 的「功能 3 / Feature 3」输出清单同步为单份合并报告，移除已不再生成的 `demography_analysis_report_{lang}.html` 条目。
 
 ---
 
-## [Unreleased pre-integration] — `demography_analysis` 改进批 2
+## [0.4.4] — 2026-05-28 — `demography_analysis` 改进批 2
 
 人口与劳动力分析模块的模型保真度、报告完整度、CLI 体验同步提升。
 
@@ -34,7 +41,6 @@ V3_EMA 的版本变更记录，遵循 [Keep a Changelog](https://keepachangelog.
 - **`WORKING_ADULT_RATIO_SKEW_MAXIMUM` 偏移模型**：`project_workforce_ratio` 不再均匀分摊死亡。当当前比例与目标比例偏离时，按 `skew = clamp(target/current, 1/SKEW_MAX, SKEW_MAX)` 把死亡向被低估的群体倾斜，推动比例收敛得更快。`--no-skew` 回到旧的均匀模型。
 - **动态 SoL 投影**：`--sol-start FLOAT --sol-end FLOAT` 让 SoL 在投影窗口内按线性轨迹演化。`model.project_workforce_ratio` 接收 `sol_trajectory` 回调；带轨迹时不复用缓存 rates。SoL 敏感性组（已带 `projection_sol`）不受影响。
 - **污染瞬态模拟**：`model.simulate_pollution(generated, arable, months)` 按 `pollution += (target - pollution) * change_speed / pollution_max` 月演化。CLI 输出新文件 `pollution_dynamics.csv`，`--pollution-dynamics-months` 控制长度（0 关闭）。
-- **英文学术分析报告** `demography_analysis_report_en.html`：原本只有中文。所有章节文案进 `i18n.ANALYSIS_TEXT` 双语字典。
 - **更多 CLI 开关**：`--language {en,zh,all}`、`--no-html`、`--no-csv`、`--skip-modifier-scan`、`--bar-chart-top-n N`。
 - **`sol_to_wealth(sol)` 映射**（M8）：`Scenario.wealth_from_sol=True` 现按 `1.5 * sol` 估算代理 wealth，不再粗暴地 `wealth = sol`。`Private health` 场景从「(wealth=SoL)」改名「(wealth from SoL)」反映新口径。
 
@@ -48,19 +54,56 @@ V3_EMA 的版本变更记录，遵循 [Keep a Changelog](https://keepachangelog.
 
 - 重构前的单文件 1798 行 `analyze_demography.py` 拆分为 11 个模块（`util/constants/model/scenarios/modifier_scan/modifier_lookup/game_modifiers/i18n/chart_svg/rows/report`），主入口缩到约 280 行。
 - `project_workforce_ratio` 内 `adjusted_rates` 由每月调用降为静态 SoL 路径每场景调用一次（P1，约 60× 减少）。
-- 劳动力图 y 轴不再钉死 25%–50%，由 `workforce_chart_bounds(initial, target)` 按实参外扩，避免非默认参数被裁剪（P2）。
 - HTML CSS 抽出 `REPORT_CSS`/`ANALYSIS_CSS` 常量，不再两份模板各贴一份（R1）。
 - 图表样式与翻译解耦（S4）：`svg_line_chart` 接收 `style_keys` 参数，调用方显式标 `"base"/"birth"/"mortality"/"natural_growth"`；不再依赖匹配 "出生率"/"birth" 等翻译字串。
 - `formula_block` 同步反映 M4 skew、M5 瞬态污染、M7 SoL 惩罚缩放、M8 wealth 映射（R4）。
-- 学术分析报告「7. 局限性」节附量化差异行：skew on/off 与 SoL 轨迹/常量两组对比的最终比例 / 总人口偏差（R3）。
 - **bug fix**：`Starvation (partial)` 的硬编码 `birth_mult=-0.25` 与游戏实际 `state_birth_rate_mult=-0.7` 不符，已纠正为 `-0.70`（M1 的漂移哨兵首次发现）。
 - 新增 `tests/test_demography.py`，36 个测试覆盖常量解析、分段曲线、污染钳位、投影守恒律、modifier_lookup 提取、skew 行为、动态 SoL、wealth 映射、污染瞬态、starvation_penalty 漂移哨兵等。
 
 ### 输出影响（baseline 已 bump）
 
 - `rates_by_sol.csv`、`net_growth_sensitivity.csv`、`workforce_projection.csv`、`workforce_sensitivity.csv`、`modifier_source_summary.csv`：受 M3/M4/M7/M8/P4 影响，数值小幅变化（饥荒新行、skew 改变投影、污染惩罚加深、wealth proxy 变化、浮点格式化）。
-- 新增 `pollution_dynamics.csv`、`demography_analysis_report_en.html`。
+- 新增 `pollution_dynamics.csv`。
 - `modifier_sources.csv`、`pollution_impact_examples.csv`：内容不变。
+
+---
+
+## [0.5.0] — 2026-06-15
+
+**功能 2 扩展：地区资源可视化**（[v3_ema/map/](v3_ema/map/)）。把地区资源统计表的数字画到游戏自带世界地图上——这是功能 2 的自然延伸，故归入同一小节。本条目合并了开发期的多次同日迭代。
+
+### 新增 (Added)
+
+- **资源等值图（choropleth）**：CLI `v3-ema regions map`。技法是 Paradox 社区通用的「省份索引色 → 查找表重着色」——每个省份在 `game/map_data/provinces.png` 里是唯一平涂色，用 numpy 2²⁴ 项 LUT 一次性向量化整图重着色（8192×3616 约 2 秒）。经像素级核验：省→州 1:1 零碰撞、99.76% 像素直接命中，余者为省界抗锯齿（自然成描边）。
+- **可选依赖** `[map] = pillow, numpy`；`model.StateRegion.province_colors` + loader 保留省色（对既有 buildings/regions/demography 功能零影响）。
+- **按资源种类自动配色** `--cmap auto`（默认）：每种资源一个助记色相（煤=炭黑、铁=钢蓝、硫=黄、金=琥珀、油=茄紫、伐木=森绿、渔=青、捕鲸=藏蓝、橡胶=橄榄、铅=石板紫），浅→深 = 少→多；另有 viridis/magma/plasma/inferno 与单色系。`--gamma`（默认 0.7）增强深浅区分。
+- **地块数值标注**：每州在几何中心标注数量（面积加权质心，含 wrap_x 反子午线**环绕修正**——如俄罗斯楚科奇跨地图边界不再偏移到海里）。`--labels/--no-labels`。
+- **维多利亚风格**：图例/标注用游戏自带字体（ParadoxVictorian / Playfair / EB Garamond + Noto Serif SC）；羊皮纸图例卡置于**中下方**，大标题 + 资源色块，缩略图也能分辨；图片输出统一英文。
+- **州界 + 1836 国界**：`--borders`（默认）描州界与海岸线；`--countries` 叠国界，`--country-filter {civilized(默认),recognized,all}` 据 `country_type` 过滤（civilized 丢弃 decentralized 部落政权但保留中日波斯等大国），`--min-country-provinces`（默认 8）按规模再过滤。
+- **矢量 SVG** `--svg`（可配 `--all`，每图一份）：高清栅格底图 + 矢量数值/图例，`@font-face` 内嵌游戏字体，缩放打印不糊。
+- **高清导出** `--full-res`（原生 8192px）；另有 `--width`、`--clip`、`--log-scale`、`--reverse`、`--grid`。
+- **交互式 HTML** `resource_map.html`：单文件，浏览器端 canvas 重着色，下拉切 14 图层 / 配色、按大洲缩放、搜地区名、开关标注、悬停看「州名 + 数值」。
+- **跨版本资源变化图** `regions map-diff old.xlsx new.xlsx`：复用 `read_regions_report` 逐州求差，发散配色（红=削减、绿=增加），按各报表自身语言匹配资源列。
+- **多版本时间线** `regions map-timeline a.xlsx b.xlsx …`：版本滑块 + 绝对值 / Δ较上版 / Δ较首版。
+- **地图嵌入 Excel** `regions report --maps`：渲染图集内嵌为「资源地图」工作表。
+- **「金矿 / 金矿场」合并**：`building_gold_field`（可发现地表矿，`depleted_type = building_gold_mine`）与 `building_gold_mine` 是同一资源的不同阶段，按 canonical 求和为单一图层（资源图层 11 → 10）。
+- **农作物分布图** `regions map --crops`（[metrics.build_crop_metrics](v3_ema/map/metrics.py)）：按各州 `arable_resources` 列出 16 种作物（小麦/水稻/棉花/烟草/葡萄/甘蔗/咖啡/茶/丝/染料/罂粟…），每图显示该作物的**可种植范围**并按可耕地深浅着色；每种作物一个助记色（[colormap.CROP_DARK](v3_ema/map/colormap.py)）。输出到 `out/regions/maps/crops/`；交互 HTML 也增列这 16 个作物图层（共 30 层）。
+- **渲染进度条**（无新依赖，stderr）。
+
+### 修复 / 调整 (Fixed / Refinements)
+
+- **「·」乱码**：分隔符在 ParadoxVictorian 字体缺字形 → 版本行改用 EB Garamond（含 middot）渲染，标题仍用 ParadoxVictorian（无此符号）。
+- **标题移到海洋空白区**（参考 V3 Wiki 范例）：不再用遮挡地图的 plaque——按 WATER 覆盖率自动在最空旷海域定位标题，白色描边增强辨识、字号略缩、保留资源色块；图例卡留在**左下角**并略放大。
+- **楚科奇环绕修正**：跨 `wrap_x` 反子午线的州（楚科奇/阿拉斯加）改用圆周加权质心，标注不再落到海里（PNG + HTML）。
+- **标注随分辨率缩放**：数值字号上下限按图宽缩放（PNG + SVG），`--full-res` / showcase 的数字不再偏小，与主图集一致。
+- **交互地图无限左右滚动**：`resource_map.html` 改为相机模型——拖动平移、滚轮缩放、**横向首尾相连无缝环绕**（如 P 社游戏内地图），消除缩放接缝处的割裂感；大洲跳转**居中**（原先锁左）、包围盒**环绕感知**（修复东亚/大洋洲跨接缝不缩放）。
+- **交互地图更清晰**：底图默认 4096px，新增 `--html-width`（可上探 8192）；真·矢量请用 `--svg`（浏览器内多边形矢量化需轮廓库，暂不可行）。
+
+### 输出 / 文档 (Output / Docs)
+
+- 输出整理到 `out/regions/maps/`：图集 PNG/SVG + 交互 HTML 在顶层；`diffs/` 变化图、`crops/` 农作物、`atlas/` Excel 素材、`showcase/` 高清·国界分目录。
+- 根 `README.md` / `README.en.md`：地图并入「功能 2：地区资源统计与可视化」小节（2a 表格 + 2b 地图），并新增示例插图（`docs/images/`）。
+- **依赖管理**：新增 [requirements.txt](requirements.txt)（openpyxl / pillow / numpy / scipy），`pip install -r requirements.txt` 一键装齐；`pyproject` 的 `[map]` extra 同步加入 scipy（用于加粗国界，缺失时自动降级）。
 
 ---
 

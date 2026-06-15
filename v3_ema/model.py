@@ -90,6 +90,11 @@ class StateRegion:
     subsistence_building: str | None = None
     naval_exit_id: int | None = None
     province_count: int = 0
+    # 0xRRGGBB integer color of each province belonging to this state, as listed
+    # in `provinces = { "xRRGGBB" ... }`. These index directly into the pixels of
+    # game/map_data/provinces.png, enabling choropleth rendering. Empty for the
+    # handful of states whose blocks omit a provinces list.
+    province_colors: list[int] = field(default_factory=list)
 
 
 @dataclass

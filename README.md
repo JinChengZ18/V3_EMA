@@ -24,13 +24,15 @@ EMA可以方便快捷地实现端到端的V3经济分析，从而解决上述问
 
 ### 第二步：装 Python 与依赖
 
-需要 Python ≥ 3.10。在 V3_EMA 目录打开 PowerShell：
+需要 Python ≥ 3.10。在 V3_EMA 目录打开 PowerShell，一键装齐全部依赖：
 
 ```powershell
-python -m pip install openpyxl
+python -m pip install -r requirements.txt
 ```
 
-只有一个依赖（`openpyxl`，写 Excel 用）。
+各依赖用途：`openpyxl`（所有功能的 Excel 报表）、`pillow` + `numpy`（功能 2 的地图渲染）、`scipy`（地图国界加粗，可选，缺失自动降级）。只用表格、不画地图的话，`pip install openpyxl` 即可。
+
+
 
 ### 第三步：首次运行 —— 找到游戏
 
@@ -88,7 +90,11 @@ python -m v3_ema report --lang braz_por  --out v3_ema_report_bp.xlsx
 
 报表包含 12 张 sheet：信息 / 总览 / 农业 / 种植园 / 开采业 / 制造业 / 服务业 / 基础设施 / 政府 / 军政 / 纪念物 / 建造部门。每行核心字段：建筑 / 基础-次要-自动化生产方式 / 产出价值 / 投入价值 / 利润 / 建造力 / 劳动力 / 工资倍率 / 建造力回报率 / 人均年产值。Diff 工作簿含「新增-组合 / 移除-组合 / 变更-组合」等 6 张 sheet，变更字段以「旧 / 新 / Δ」三列并排，Δ 自动绿/红着色。
 
-### 功能 2：地区资源统计
+### 功能 2：地区资源统计与可视化
+
+地区资源有两种呈现：**统计表**（Excel）与**地图可视化**（PNG/SVG/交互 HTML）——后者是前者的自然延伸，把同一份数据画到游戏地图上。
+
+#### 2a · 资源统计表
 
 ```powershell
 # 生成当前版本（默认中文）
@@ -114,6 +120,53 @@ python -m v3_ema regions report --lang braz_por  --out regions_bp.xlsx
 输出位置：`V3_EMA\out\regions\{reports,diffs}\`。
 
 报表按 14 个大洲分桶（西欧 / 南欧 / 北欧 / 东欧 / 北美 / 中美 / 南美 / 非洲 / 中东 / 中亚 / 印度 / 东亚 / 东南亚 / 大洋洲）。**首行是合计**（该桶内全部地区资源总和）。每行核心字段：地区 / 战略大区 / 可耕地 / 可耕作建筑 / 上限总和 / **每种资源的单项列**（铁矿/煤矿/林业营地/油田 等，方便排序对比）/ 总产能容量 / 地区特性。
+
+#### 2b · 地区资源地图（可视化）
+
+把统计表里的每个数字**重新着色到游戏自带的世界地图上**，深浅表示资源数目，并在每块地的几何中心**直接标注数值**。技法是 Paradox 社区通用的「省份索引色 → 查找表重着色」。配色、字体取自游戏自带资源（维多利亚风格），图片输出统一为英文。
+
+| 资源等值图（铁矿 · 自动配色 + 标注 + 图例） | 跨版本资源变化图（红=削减，绿=增加） |
+| --- | --- |
+| ![iron](docs/images/map_building_iron_mine.png) | ![diff](docs/images/map_diff_building_coal_mine_v1.8.7_to_v1.13.4.png) |
+| **总潜能 + 1836 国界**（自动跳过部落小国） | **金矿**（已合并金矿场，琥珀配色） |
+| ![total](docs/images/map_total_capacity.png) | ![gold](docs/images/map_building_gold_mine.png) |
+| **小麦分布**（`--crops` 农作物图，按可耕地深浅） | |
+| ![wheat](docs/images/crop_building_wheat_farm.png) | |
+
+> 需额外两个依赖（不影响其它功能）：`python -m pip install "pillow>=10" "numpy>=1.24"`（或 `pip install -e ".[map]"`）。
+
+```powershell
+# 默认：画「总潜能」PNG + 交互式 HTML（深浅 = 资源量，地块标数值）
+python -m v3_ema regions map
+
+# 单个图层（任一资源建筑 id 或聚合量），默认按资源种类自动配色
+python -m v3_ema regions map --metric building_iron_mine     # 铁矿 → 钢蓝
+python -m v3_ema regions map --all --svg                     # 全部 14 图层，各配一份矢量 SVG
+python -m v3_ema regions map --crops                         # 16 种农作物分布图 → maps/crops/
+
+# 国界 / 高清 / 矢量
+python -m v3_ema regions map --metric total_capacity --countries                              # 叠 1836 国界（默认丢部落小国）
+python -m v3_ema regions map --metric total_capacity --countries --country-filter recognized  # 只描列强承认国
+python -m v3_ema regions map --metric building_iron_mine --full-res                           # 原生 8192px
+
+# 跨版本变化图（红减绿增，复用功能 2 的两份报表，内置基线开箱即用）
+python -m v3_ema regions map-diff baseline_regions_v1.8.7.xlsx baseline_regions_v1.13.4.xlsx --metric building_coal_mine
+
+# 多版本时间线交互图（版本滑块 + Δ变化）
+python -m v3_ema regions map-timeline baseline_regions_v1.8.7.xlsx baseline_regions_v1.13.4.xlsx
+
+# 把资源地图直接嵌进上面的 Excel 报表（新增「资源地图」工作表）
+python -m v3_ema regions report --maps
+```
+
+输出位置：`out/regions/maps/`（图集 PNG/SVG + 交互 HTML；`diffs/` 变化图、`national/` 国界版、`atlas/` Excel 素材、`showcase/` 高清·国界）。
+
+- **PNG**：`map_<metric>.png`，中下方**艺术图例**（资源色块 + 大标题，缩略图也能一眼分辨是哪种资源），每块地标数值、描州界；字体取自游戏 ParadoxVictorian / Playfair / EB Garamond。
+- **交互式 HTML**：`resource_map.html` —— 单文件，浏览器打开即用：下拉切 14 图层、切配色、按大洲缩放、搜地区名、开关数值标注、悬停看「州名 + 数值」。
+- **矢量 SVG**（`--svg`，可配 `--all`）：高清栅格底图 + 矢量数值/图例，**内嵌游戏字体**（与 PNG 一致），缩放打印不糊。
+- **国界**（`--countries`）：`--country-filter civilized`（默认，丢部落/分散政权但保留中日波斯）/ `recognized`（仅列强承认国）/ `all`；`--min-country-provinces N`（默认 8）按规模再过滤。
+- **农作物分布**（`--crops`）：据各州 `arable_resources` 出 16 种作物图（小麦/水稻/棉花/烟草/葡萄/甘蔗/咖啡/茶/丝/染料/罂粟…），显示可种植范围并按可耕地深浅着色，输出到 `maps/crops/`；交互 HTML 也含这些作物图层（共 30 层）。
+- **配色**（`--cmap`）：`auto`（默认）每种资源/作物各取助记色相（煤=炭黑、铁=钢蓝、硫=黄、金=琥珀、油=茄紫、伐木=森绿…；小麦=金、水稻=稻绿、棉花=灰褐…），浅→深 = 少→多；也可强制 `viridis`/`magma`/`plasma`/`inferno` 或单色 `blues`/`greens`/… 。`--gamma`（默认 0.7）增强深浅区分，`--labels/--no-labels`、`--clip`、`--log-scale` 微调。
 
 ### 功能 3：人口与劳动力比例分析
 
@@ -144,8 +197,7 @@ python -m v3_ema demography report --no-skew
 
 每次运行产出（默认 `--ui-lang both`）：
 
-- `demography_report_{en,zh}.html` — 紧凑图表 + 数据报告
-- `demography_analysis_report_{en,zh}.html` — 学术风格分析报告（含基础曲线、敏感性、医疗对比、量化局限性）
+- `demography_report_{en,zh}.html` — 单文件合并报告：学术风格分析正文（基础曲线、敏感性、医疗对比、方法局限）与全部图表、场景表、数据字典内联同一文档
 - `rates_by_sol.csv` — 按 SoL × 场景的出生率/死亡率/自然增长
 - `net_growth_sensitivity.csv` — 按因素分组的自然增长敏感性
 - `workforce_projection.csv` — 各场景 100 年劳动力比例与人口曲线

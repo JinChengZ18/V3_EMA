@@ -1,0 +1,10 @@
+# V3_EMA runtime dependencies.
+#   pip install -r requirements.txt
+#
+# Core (Excel reports — features 1/2/3) needs only openpyxl.
+# The rest power the region resource maps (feature 2's visualization).
+
+openpyxl>=3.1      # xlsx reports (all features)
+pillow>=10         # map rendering — recolor provinces.png, draw legend/labels
+numpy>=1.24        # map rendering — vectorized LUT recolor
+scipy>=1.10        # map rendering — thicken national borders (optional; degrades gracefully if absent)
