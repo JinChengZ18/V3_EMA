@@ -33,11 +33,11 @@ run "$PY" -m v3_ema regions map --all --svg "${GR[@]}"
 run "$PY" -m v3_ema regions map --crops --svg "${GR[@]}"
 
 # 3. 1836 national borders on every layer (civilized filter) -> maps/national/
-run "$PY" -m v3_ema regions map --all --countries --format png --out "$M/national" "${GR[@]}"
+run "$PY" -m v3_ema regions map --all --countries --svg --format png --out "$M/national" "${GR[@]}"
 
 # 4. Recognized-only national borders -> maps/national_recognized/
 run "$PY" -m v3_ema regions map --metric total_capacity --countries --country-filter recognized \
-    --format png --out "$M/national_recognized" "${GR[@]}"
+    --svg --format png --out "$M/national_recognized" "${GR[@]}"
 
 # 5. High-res showcase (native 8192 + borders + SVG) -> maps/showcase/
 run "$PY" -m v3_ema regions map --metric total_capacity --full-res --countries --svg \
@@ -45,16 +45,16 @@ run "$PY" -m v3_ema regions map --metric total_capacity --full-res --countries -
 
 # 6. Option demos (grid+cmap, log+no-borders, gamma+reverse) -> maps/options/
 run "$PY" -m v3_ema regions map --metric building_coal_mine --grid --cmap magma \
-    --format png --out "$M/options" "${GR[@]}"
+    --svg --format png --out "$M/options" "${GR[@]}"
 run "$PY" -m v3_ema regions map --metric building_gold_mine --log-scale --no-borders \
-    --format png --out "$M/options" "${GR[@]}"
+    --svg --format png --out "$M/options" "${GR[@]}"
 run "$PY" -m v3_ema regions map --metric building_iron_mine --gamma 1.0 --reverse --cmap viridis \
-    --format png --out "$M/options" "${GR[@]}"
+    --svg --format png --out "$M/options" "${GR[@]}"
 
 # 7. Cross-version change maps -> maps/diffs/
 run "$PY" -m v3_ema regions map-diff "$OLD" "$NEW" --metric building_coal_mine --countries --svg "${GR[@]}"
-run "$PY" -m v3_ema regions map-diff "$OLD" "$NEW" --metric total_capacity "${GR[@]}"
-run "$PY" -m v3_ema regions map-diff "$OLD" "$NEW" --metric building_iron_mine "${GR[@]}"
+run "$PY" -m v3_ema regions map-diff "$OLD" "$NEW" --metric total_capacity --svg "${GR[@]}"
+run "$PY" -m v3_ema regions map-diff "$OLD" "$NEW" --metric building_iron_mine --svg "${GR[@]}"
 
 # 8. Multi-version timeline viewer (default + a no-current variant)
 run "$PY" -m v3_ema regions map-timeline "$OLD" "$NEW" "${GR[@]}"

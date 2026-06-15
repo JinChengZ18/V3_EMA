@@ -2,7 +2,7 @@
 
 [中文](README.md) | **English**
 
-Econometrics Automation, the EMA tool, is a fully automated pipeline for V3 econometric research. It does not modify game content in any way; on the contrary, it extracts data from local files and produces structured Excel reports.
+Econometrics Automation, the EMA tool, is a fully automated pipeline for V3 econometric research. It does not modify game content in any way; on the contrary, it extracts data from local files for tabular archiving, data visualization, and map rendering.
 
 ### Why this tool?
 
@@ -13,6 +13,7 @@ EMA solves this with end-to-end V3 economic analysis:
 - One command: export an Excel sheet with all 1500+ combinations for the **current version**
 - One command: diff **two reports** to see exactly which buildings and which fields changed
 - The report auto-embeds the game version (e.g. `1.13.4 (Matcha)`) for easy archival
+- Intuitive data visualization and map rendering
 
 
 

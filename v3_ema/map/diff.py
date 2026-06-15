@@ -20,7 +20,7 @@ from ..parser.yml_loc import load_localization
 from ..util.logging import get_logger
 from . import colormap as cm
 from . import render as R
-from .metrics import AGGREGATES, RESOURCE_ALIASES, canonical_resource
+from .metrics import AGGREGATES, RESOURCE_ALIASES, canonical_resource, metric_label
 
 log = get_logger()
 
@@ -167,8 +167,7 @@ def generate_diff(
                   "language-specific; old/new/current game should share --lang).", metric_key)
         return None
 
-    label = game.loc.get_clean(metric_key) if game.loc is not None else metric_key
-    title = label
+    title = metric_label(game, ui, metric_key)   # aggregate -> UI label, resource -> loc name (no raw "_")
     R.set_swatch_labels(nodata=ui["map_nodata"], water=ui["map_water"])
     index = R.ProvinceIndex.build(game, game_root, width=width)
     sub = f"{ui['map_change']}  ·  {old_v} → {new_v}"

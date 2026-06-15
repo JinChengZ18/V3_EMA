@@ -36,6 +36,30 @@ def canonical_resource(bld: str) -> str:
     return RESOURCE_ALIASES.get(bld, bld)
 
 
+def _humanize(key: str) -> str:
+    """Readable fallback name from a raw id when localization is missing: strip
+    the `building_` prefix, underscores -> spaces, Title Case (never shows the
+    internal '_' id in a map title)."""
+    s = key[len("building_"):] if key.startswith("building_") else key
+    return s.replace("_", " ").strip().title() or key
+
+
+def _loc_name(game: GameData, key: str) -> str:
+    """Localized name for a building id, with a humanized fallback (so a missing
+    loc entry never leaks a `building_..._..` id onto the map)."""
+    name = game.loc.get_clean(key) if game.loc is not None else key
+    return name if (name and name != key and "_" not in name) else _humanize(key)
+
+
+def metric_label(game: GameData, ui: UI, key: str) -> str:
+    """Display label for any metric key (aggregate or resource). Aggregates use
+    the i18n UI label; resources use the localized building name. Used by the
+    diff / timeline titles, which otherwise would show the raw key."""
+    if key in AGGREGATES:
+        return ui[AGGREGATES[key][1]]
+    return _loc_name(game, canonical_resource(key))
+
+
 @dataclass
 class Metric:
     key: str                                   # aggregate key or building_* id
@@ -74,7 +98,7 @@ def build_metrics(
         rows = list(build_region_rows(game, ui))
 
     def loc(bld: str) -> str:
-        return game.loc.get_clean(bld) if game.loc is not None else bld
+        return _loc_name(game, bld)
 
     metrics: list[Metric] = []
 
@@ -122,7 +146,7 @@ def build_crop_metrics(game: GameData, ui: UI, *, only: str | None = None) -> li
     range + how much farmland is there. Value = arable_land if supported, else 0.
     """
     def loc(b: str) -> str:
-        return game.loc.get_clean(b) if game.loc is not None else b
+        return _loc_name(game, b)
 
     crops = sorted({
         b for s in game.state_regions.values() if not s.is_sea for b in s.arable_resources

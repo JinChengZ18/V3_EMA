@@ -442,37 +442,6 @@ class ProvinceIndex:
                      "(raise --width / use --full-res)", drawn, skipped)
 
 
-def find_ocean_spot(base: Image.Image, bw: int, bh: int, avoid=None):
-    """Top-left (x, y) for a bw×bh title box placed over the emptiest stretch of
-    ocean (max WATER coverage), avoiding the `avoid` rect (the legend). V3-wiki
-    style — the title sits in open sea rather than occluding land."""
-    W, H = base.size
-    sw = 480
-    sh = max(1, round(H * sw / W))
-    sm = np.asarray(base.convert("RGB").resize((sw, sh), Image.NEAREST)).astype(int)
-    water = ((np.abs(sm[:, :, 0] - WATER[0]) < 26) & (np.abs(sm[:, :, 1] - WATER[1]) < 26)
-             & (np.abs(sm[:, :, 2] - WATER[2]) < 26)).astype(np.int64)
-    ii = np.zeros((sh + 1, sw + 1), np.int64)
-    ii[1:, 1:] = water.cumsum(0).cumsum(1)
-    wbw = max(1, min(round(bw * sw / W), sw - 1))
-    wbh = max(1, min(round(bh * sh / H), sh - 1))
-    if avoid:
-        ax0, ay0, ax1, ay1 = (avoid[0] * sw / W, avoid[1] * sh / H, avoid[2] * sw / W, avoid[3] * sh / H)
-    else:
-        ax0 = ay0 = ax1 = ay1 = -1
-    best, bestfrac = None, -1.0
-    ystep, xstep = max(1, wbh // 3), max(1, wbw // 4)
-    for y in range(0, sh - wbh + 1, ystep):
-        for x in range(0, sw - wbw + 1, xstep):
-            if avoid and not (x + wbw < ax0 or x > ax1 or y + wbh < ay0 or y > ay1):
-                continue
-            s = ii[y + wbh, x + wbw] - ii[y, x + wbw] - ii[y + wbh, x] + ii[y, x]
-            frac = s / (wbw * wbh)
-            if frac > bestfrac:
-                bestfrac, best = frac, (x, y)
-    if best is None or bestfrac < 0.55:
-        return round(W * 0.30), round(H * 0.04)        # fallback: north ocean band
-    return round(best[0] * W / sw), round(best[1] * H / sh)
 
 
 def draw_legend(
@@ -522,31 +491,38 @@ def draw_legend(
     cy0 = h - cbh - margin
     bx0, bx1 = cx0 + cpad, cx0 + cpad + inner
 
-    # ---- title in open ocean (white-outlined, smaller, no plaque) ----
-    probe = fonts.for_text(title, 120)
-    pw = max(1, tw(title, probe))
-    big = int(min(max(round(120 * (w * 0.28) / pw), round(24 * scale)), round(w * 0.055)))
+    # ---- title in the open South-Atlantic / South-Indian ocean band ----
+    # Fixed size + fixed position so every map's title is uniform and lands in
+    # open sea (south of Africa). White-outlined, no occluding plaque.
+    big = max(round(w * 0.038), 22)                  # uniform across all maps
     tf = fonts.for_text(title, big)
     title_w = tw(title, tf)
-    chip = round(big * 0.84)
-    chip_gap = round(big * 0.30)
-    sub_size = max(round(big * 0.36), round(12 * scale))
+    chip = round(big * 0.82)
+    chip_gap = round(big * 0.26)
+    sub_size = max(round(big * 0.42), round(12 * scale))
     sfb = fonts.num(sub_size)
-    block_w = max(chip + chip_gap + title_w, tw(subtitle, sfb))
-    block_h = big + round(big * 0.26) + sub_size
-    tx0, ty0 = find_ocean_spot(base, block_w, block_h, (cx0, cy0, cx0 + cbw, cy0 + cbh))
-    swd = max(2, round(big * 0.085))
-    cyc = ty0 + (big - chip) // 2
+    sub_w = tw(subtitle, sfb)
+    line_gap = round(big * 0.08)                      # tight title -> subtitle spacing
+    row_w = chip + chip_gap + title_w
+    block_h = big + line_gap + sub_size
+    ocx, ocy = round(w * 0.50), round(h * 0.84)       # south of Africa — open ocean on every map
+    row_x = ocx - row_w // 2
+    row_y = ocy - block_h // 2
+    swd = max(2, round(big * 0.06))
+    cyc = row_y + (big - chip) // 2
     rr = max(2, chip // 6)
-    if diverging:
-        d.rounded_rectangle([tx0, cyc, tx0 + chip, cyc + chip], radius=rr, fill=(170, 45, 40, 255))
-        d.rectangle([tx0 + chip // 2, cyc, tx0 + chip, cyc + chip], fill=(*accent, 255))
-        d.rounded_rectangle([tx0, cyc, tx0 + chip, cyc + chip], radius=rr, outline=WHITE, width=swd)
+    if diverging:                                     # clean two-tone chip (red = cut | green = grew)
+        d.rounded_rectangle([row_x, cyc, row_x + chip // 2, cyc + chip], radius=rr,
+                            corners=(True, False, False, True), fill=(170, 45, 40, 255))
+        d.rounded_rectangle([row_x + chip // 2, cyc, row_x + chip, cyc + chip], radius=rr,
+                            corners=(False, True, True, False), fill=(40, 120, 55, 255))
+        d.rounded_rectangle([row_x, cyc, row_x + chip, cyc + chip], radius=rr, outline=WHITE, width=swd)
     else:
-        d.rounded_rectangle([tx0, cyc, tx0 + chip, cyc + chip], radius=rr, fill=(*accent, 255), outline=WHITE, width=swd)
-    d.text((tx0 + chip + chip_gap, ty0), title, font=tf, fill=(28, 20, 12, 255),
+        d.rounded_rectangle([row_x, cyc, row_x + chip, cyc + chip], radius=rr,
+                            fill=(*accent, 255), outline=WHITE, width=swd)
+    d.text((row_x + chip + chip_gap, row_y), title, font=tf, fill=(28, 20, 12, 255),
            stroke_width=swd, stroke_fill=WHITE)
-    d.text((tx0, ty0 + big + round(big * 0.20)), subtitle, font=sfb, fill=(46, 36, 26, 255),
+    d.text((ocx - sub_w // 2, row_y + big + line_gap), subtitle, font=sfb, fill=(46, 36, 26, 255),
            stroke_width=max(1, round(sub_size * 0.16)), stroke_fill=(255, 255, 255, 235))
 
     # ---- draw the legend card ----
@@ -656,28 +632,33 @@ def svg_legend(index: "ProvinceIndex", fill_img: Image.Image, title: str, subtit
     sq_y = yy
     lbl_b = yy + (sw + ssize) / 2 - 1
 
-    probe = fonts.for_text(title, 120)
-    pw = max(1, tw(title, probe))
-    big = int(min(max(round(120 * (w * 0.28) / pw), round(24 * scale)), round(w * 0.055)))
+    big = max(round(w * 0.038), 22)                  # fixed size — uniform across maps
     tf = fonts.for_text(title, big)
     title_w = tw(title, tf)
-    chip = round(big * 0.84)
-    chip_gap = round(big * 0.30)
-    sub_size = max(round(big * 0.36), round(12 * scale))
+    chip = round(big * 0.82)
+    chip_gap = round(big * 0.26)
+    sub_size = max(round(big * 0.42), round(12 * scale))
     sfb = fonts.num(sub_size)
-    block_w = max(chip + chip_gap + title_w, tw(subtitle, sfb))
-    block_h = big + round(big * 0.26) + sub_size
-    tx0, ty0 = find_ocean_spot(fill_img, block_w, block_h, (cx0, cy0, cx0 + cbw, cy0 + cbh))
-    swd = max(2, round(big * 0.085))
-    cyc = ty0 + (big - chip) // 2
+    sub_w = tw(subtitle, sfb)
+    line_gap = round(big * 0.08)
+    row_w = chip + chip_gap + title_w
+    block_h = big + line_gap + sub_size
+    ocx, ocy = round(w * 0.50), round(h * 0.84)      # south of Africa — open ocean
+    row_x = ocx - row_w // 2
+    row_y = ocy - block_h // 2
+    swd = max(2, round(big * 0.06))
+    cyc = row_y + (big - chip) // 2
     rr = max(2, chip // 6)
-    title_b = ty0 + big * 0.80
-    sub_b = ty0 + big + round(big * 0.20) + sub_size * 0.80
+    title_b = row_y + big * 0.80
+    sub_b = row_y + big + line_gap + sub_size * 0.80
 
     stops = "".join(
         f'<stop offset="{i/(len(table)-1):.3f}" stop-color="rgb({int(c[0])},{int(c[1])},{int(c[2])})"/>'
         for i, c in enumerate(table))
-    p = [f'<defs><linearGradient id="lg" x1="0" x2="1">{stops}</linearGradient></defs>',
+    chipg = ('<linearGradient id="chipg" x1="0" x2="1">'
+             '<stop offset="0.5" stop-color="rgb(170,45,40)"/>'
+             '<stop offset="0.5" stop-color="rgb(40,120,55)"/></linearGradient>')
+    p = [f'<defs><linearGradient id="lg" x1="0" x2="1">{stops}</linearGradient>{chipg}</defs>',
          f'<g font-family="{_BODY_FAM}">',
          f'<rect x="{cx0+3}" y="{cy0+4}" width="{cbw}" height="{cbh}" rx="{crad}" fill="rgb(35,25,15)" fill-opacity="0.24"/>',
          f'<rect x="{cx0}" y="{cy0}" width="{cbw}" height="{cbh}" rx="{crad}" fill="rgb(252,250,245)" fill-opacity="0.94" stroke="rgb(150,135,110)" stroke-width="2"/>',
@@ -696,16 +677,12 @@ def svg_legend(index: "ProvinceIndex", fill_img: Image.Image, title: str, subtit
     p.append(f'<rect x="{mx}" y="{sq_y}" width="{sw}" height="{sw}" fill="rgb(176,206,230)" stroke="rgb(170,160,145)"/>')
     p.append(f'<text x="{mx+sw+6}" y="{lbl_b:.1f}" font-size="{ssize}" fill="rgb(96,84,70)">{_xml(water)}</text>')
     p.append("</g>")
-    # ---- title in open ocean, white-outlined ----
-    p.append(f'<g paint-order="stroke" stroke-linejoin="round" stroke="rgb(255,255,255)">')
-    if diverging:
-        p.append(f'<rect x="{tx0}" y="{cyc}" width="{chip//2}" height="{chip}" rx="{rr}" fill="rgb(170,45,40)" stroke="none"/>')
-        p.append(f'<rect x="{tx0+chip//2}" y="{cyc}" width="{chip-chip//2}" height="{chip}" fill="rgb{accent}" stroke="none"/>')
-        p.append(f'<rect x="{tx0}" y="{cyc}" width="{chip}" height="{chip}" rx="{rr}" fill="none" stroke-width="{swd}"/>')
-    else:
-        p.append(f'<rect x="{tx0}" y="{cyc}" width="{chip}" height="{chip}" rx="{rr}" fill="rgb{accent}" stroke-width="{swd}"/>')
-    p.append(f'<text x="{tx0+chip+chip_gap}" y="{title_b:.1f}" font-size="{big}" font-family="{_TITLE_FAM}" fill="rgb(28,20,12)" stroke-width="{swd}">{_xml(title)}</text>')
-    p.append(f'<text x="{tx0}" y="{sub_b:.1f}" font-size="{sub_size}" font-family="{_BODY_FAM}" fill="rgb(46,36,26)" stroke-width="{max(1,round(sub_size*0.16))}">{_xml(subtitle)}</text>')
+    # ---- title in open ocean (fixed, white-outlined) ----
+    p.append('<g paint-order="stroke" stroke-linejoin="round" stroke="rgb(255,255,255)">')
+    fill_chip = 'url(#chipg)' if diverging else f'rgb{accent}'
+    p.append(f'<rect x="{row_x}" y="{cyc}" width="{chip}" height="{chip}" rx="{rr}" fill="{fill_chip}" stroke-width="{swd}"/>')
+    p.append(f'<text x="{row_x+chip+chip_gap}" y="{title_b:.1f}" font-size="{big}" font-family="{_TITLE_FAM}" fill="rgb(28,20,12)" stroke-width="{swd}">{_xml(title)}</text>')
+    p.append(f'<text x="{ocx}" y="{sub_b:.1f}" font-size="{sub_size}" text-anchor="middle" font-family="{_BODY_FAM}" fill="rgb(46,36,26)" stroke-width="{max(1,round(sub_size*0.16))}">{_xml(subtitle)}</text>')
     p.append("</g>")
     return "\n".join(p)
 
