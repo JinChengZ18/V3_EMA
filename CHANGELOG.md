@@ -105,7 +105,7 @@ V3_EAT 的版本变更记录，遵循 [Keep a Changelog](https://keepachangelog.
 - 根 `README.md` / `README.en.md`：地图并入「功能 2：地区资源统计与可视化」小节（2a 表格 + 2b 地图），并新增示例插图（`docs/images/`）。
 - **依赖管理**：新增 [requirements.txt](requirements.txt)（openpyxl / pillow / numpy / scipy），`pip install -r requirements.txt` 一键装齐；`pyproject` 的 `[map]` extra 同步加入 scipy（用于加粗国界，缺失时自动降级）。
 - **一键生成脚本** [scripts/gen_maps.sh](scripts/gen_maps.sh)：跑一遍功能 2b 全部命令/参数，分桶输出到 `out/regions/maps/`，README 已说明（Windows 用 Git Bash）。
-- **内置多版本基线**：`baselines/baseline_{buildings,regions}_v{1.6.2,1.9.8,1.13.8}.xlsx`（均反映分桶修复后的结构），跨版本可直接 `diff` / `regions diff` / `regions map-diff` 对比（如 1.6.2→1.13.8 建筑 Δ933、地区 1.6.2→1.9.8 Δ189）。
+- **内置多版本基线**：`baselines/baseline_{buildings,regions}_v{1.3.6,1.6.2,1.9.8,1.13.8}.xlsx`（均反映分桶修复后的结构），跨版本可直接 `diff` / `regions diff` / `regions map-diff` 对比（如 1.6.2→1.13.8 建筑 Δ933、地区 1.6.2→1.9.8 Δ189）。新增 [scripts/make_baseline.sh](scripts/make_baseline.sh)：切换 Steam 版本后一键生成、**按当前安装版本号自动命名**基线。
 - **地区分桶修复（跨版本通用）**：1.13.x 的近东 / 尼罗河流域 / 大波斯 → 中东，大西洋海岸 → 北美，大哥伦比亚 → 南美，喜马拉雅 → 东亚；并补全 1.9.x（Lady Grey）的 31 个细分战略大区（英格兰/法兰西/莱茵/南北德意志/伊比利亚/意大利/多瑙/波兰/芬兰/波罗的/白俄/第聂伯/乌拉尔/东西西伯利亚/迪克西/中西部/马德拉斯/孟买/孟加拉/旁遮普/阿拉伯/刚果/尼日尔/塞内加尔/埃塞俄比亚/僧祇/北海/俄罗斯极地 等）。分桶表是各版本战略大区的并集，不同版本都不再出现「其他」表单，交互 HTML 大洲分组同步修正。
 - **签名水印**：地图右下角（与左下图例对称）标注「Econometrics Automation Tool / map by J.C.」，PNG/SVG/交互 HTML 均有。
 - **改名 EMA → EAT**：包 `v3_ema` → `v3_eat`、命令 `v3-eat` / `python -m v3_eat`、`pyproject`、测试、脚本、全部文档；正文 EMA/V3_EMA → EAT/V3_EAT，中文「计量经济自动化模组」→「计量经济自动化工具」。

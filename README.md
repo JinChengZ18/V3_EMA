@@ -12,7 +12,7 @@ EAT可以方便快捷地实现端到端的V3经济分析，从而解决上述问
 
 - 一行命令，**当前版本**全部 1500+ 组合的经济指标导出 Excel
 - 一行命令，**两个版本**的报表做差分，精确告诉玩家哪些建筑、哪些字段被改了多少
-- 报告自动嵌入游戏版本号（如 `1.13.4 (Matcha)`），便于历史归档
+- 报告自动嵌入游戏版本号（如 `1.13.8 (Matcha)`），便于历史归档
 - 方便直观的数据可视化和地图绘制
 
 
@@ -70,9 +70,9 @@ python -m v3_eat config --clear    # 清缓存，下次重新检测
 # 生成当前版本（默认中文）
 python -m v3_eat report
 
-# 跨版本对比 —— 项目内置 1.13.4 基线，可直接用
+# 跨版本对比 —— 项目内置多种基线，可直接用
 python -m v3_eat report --out current.xlsx
-python -m v3_eat diff baseline_buildings_v1.13.4.xlsx current.xlsx
+python -m v3_eat diff baseline_buildings_v1.13.8.xlsx current.xlsx
 
 # 切换语言（V3 全部 11 种）
 python -m v3_eat report --lang english   --out v3_eat_report_en.xlsx
@@ -101,9 +101,9 @@ python -m v3_eat report --lang braz_por  --out v3_eat_report_bp.xlsx
 # 生成当前版本（默认中文）
 python -m v3_eat regions report
 
-# 跨版本对比 —— 项目内置 1.13.4 基线，可直接用
+# 跨版本对比 —— 项目内置多种基线，可直接用
 python -m v3_eat regions report --out current.xlsx
-python -m v3_eat regions diff baseline_regions_v1.13.4.xlsx current.xlsx
+python -m v3_eat regions diff baseline_regions_v1.13.8.xlsx current.xlsx
 
 # 切换语言
 python -m v3_eat regions report --lang english   --out regions_en.xlsx
@@ -149,10 +149,10 @@ python -m v3_eat regions map --metric total_capacity --countries --country-filte
 python -m v3_eat regions map --metric building_iron_mine --full-res                           # 原生 8192px
 
 # 跨版本变化图（红减绿增，复用功能 2 的两份报表，内置基线开箱即用）
-python -m v3_eat regions map-diff baseline_regions_v1.8.7.xlsx baseline_regions_v1.13.4.xlsx --metric building_coal_mine
+python -m v3_eat regions map-diff baseline_regions_v1.9.8.xlsx baseline_regions_v1.13.8.xlsx --metric building_coal_mine
 
 # 多版本时间线交互图（版本滑块 + Δ变化）
-python -m v3_eat regions map-timeline baseline_regions_v1.8.7.xlsx baseline_regions_v1.13.4.xlsx
+python -m v3_eat regions map-timeline baseline_regions_v1.9.8.xlsx baseline_regions_v1.13.8.xlsx
 
 # 把资源地图直接嵌进上面的 Excel 报表（新增「资源地图」工作表）
 python -m v3_eat regions report --maps
@@ -222,6 +222,12 @@ python tests\test_diff.py                     # 跑测例（应有 6 个 PASS）
 ```
 
 通用参数：`--game-root <path>` 指定别的游戏根目录；`--ui-lang zh|en` 强制 UI 语言（默认根据 `--lang` 推断：simp_chinese → 中文 UI，其余 → 英文）。
+
+**跨版本基线**：项目内置 `baselines/baseline_{buildings,regions}_v{1.3.6,1.6.2,1.9.8,1.13.8}.xlsx`，可直接用于 `diff` / `regions diff` / `regions map-diff`。想给别的版本做基线：在 Steam 切到该版本（属性 → 测试版）下载完，再运行——脚本会**按当前安装的版本号自动命名**：
+
+```bash
+bash scripts/make_baseline.sh        # 写出 baselines/baseline_{buildings,regions}_v<当前版本>.xlsx
+```
 
 ---
 
