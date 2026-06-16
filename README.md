@@ -223,7 +223,7 @@ python tests\test_diff.py                     # 跑测例（应有 6 个 PASS）
 
 通用参数：`--game-root <path>` 指定别的游戏根目录；`--ui-lang zh|en` 强制 UI 语言（默认根据 `--lang` 推断：simp_chinese → 中文 UI，其余 → 英文）。
 
-**跨版本基线**：项目内置 `baselines/baseline_{buildings,regions}_v{1.3.6,1.6.2,1.9.8,1.13.8}.xlsx`，可直接用于 `diff` / `regions diff` / `regions map-diff`。想给别的版本做基线：在 Steam 切到该版本（属性 → 测试版）下载完，再运行——脚本会**按当前安装的版本号自动命名**：
+**跨版本基线**：项目内置 `baselines/baseline_{buildings,regions}_v{1.0.6,1.3.6,1.6.2,1.9.8,1.13.8}.xlsx`，可直接用于 `diff` / `regions diff` / `regions map-diff`。想给别的版本做基线：在 Steam 切到该版本（属性 → 测试版）下载完，再运行——脚本会**按当前安装的版本号自动命名**：
 
 ```bash
 bash scripts/make_baseline.sh        # 写出 baselines/baseline_{buildings,regions}_v<当前版本>.xlsx

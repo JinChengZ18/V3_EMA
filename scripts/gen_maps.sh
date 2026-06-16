@@ -18,8 +18,11 @@ cd "$(dirname "$0")/.."                       # project root (scripts/..)
 
 PY="${PYTHON:-python}"
 M="out/regions/maps"
-OLD="baseline_regions_v1.8.7.xlsx"            # bundled baselines (baselines/ is auto-searched)
-NEW="baseline_regions_v1.13.4.xlsx"
+OLD="baseline_regions_v1.0.6.xlsx"            # bundled baselines (baselines/ is auto-searched)
+NEW="baseline_regions_v1.13.8.xlsx"           # oldest -> newest span for the diff demos
+TL=(baseline_regions_v1.0.6.xlsx baseline_regions_v1.3.6.xlsx \
+    baseline_regions_v1.6.2.xlsx baseline_regions_v1.9.8.xlsx \
+    baseline_regions_v1.13.8.xlsx)            # full chronological chain for the timeline
 GR=(); [ "${GAME_ROOT:-}" ] && GR=(--game-root "$GAME_ROOT")
 
 run() { echo; echo ">>> $*"; "$@" || echo "    (command failed — continuing)"; }
@@ -56,9 +59,9 @@ run "$PY" -m v3_eat regions map-diff "$OLD" "$NEW" --metric building_coal_mine -
 run "$PY" -m v3_eat regions map-diff "$OLD" "$NEW" --metric total_capacity --svg "${GR[@]}"
 run "$PY" -m v3_eat regions map-diff "$OLD" "$NEW" --metric building_iron_mine --svg "${GR[@]}"
 
-# 8. Multi-version timeline viewer (default + a no-current variant)
-run "$PY" -m v3_eat regions map-timeline "$OLD" "$NEW" "${GR[@]}"
-run "$PY" -m v3_eat regions map-timeline "$OLD" "$NEW" --no-current \
+# 8. Multi-version timeline viewer — full 1.0.6 -> 1.13.8 chain (+ a no-current variant)
+run "$PY" -m v3_eat regions map-timeline "${TL[@]}" "${GR[@]}"
+run "$PY" -m v3_eat regions map-timeline "${TL[@]}" --no-current \
     --out "$M/timeline_nocurrent" "${GR[@]}"
 
 # 9. Excel region report with the map atlas embedded

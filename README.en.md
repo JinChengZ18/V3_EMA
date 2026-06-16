@@ -222,7 +222,7 @@ python tests\test_diff.py                     # run tests (expect 6 PASS lines)
 
 Common args: `--game-root <path>` overrides the game root; `--ui-lang zh|en` forces a UI language (default: inferred from `--lang` — `simp_chinese` → Chinese UI, everything else → English).
 
-**Cross-version baselines**: the project ships `baselines/baseline_{buildings,regions}_v{1.3.6,1.6.2,1.9.8,1.13.8}.xlsx`, ready for `diff` / `regions diff` / `regions map-diff`. To baseline another version, switch to it in Steam (Properties → Betas), let it download, then run — the script **auto-names by the installed version**:
+**Cross-version baselines**: the project ships `baselines/baseline_{buildings,regions}_v{1.0.6,1.3.6,1.6.2,1.9.8,1.13.8}.xlsx`, ready for `diff` / `regions diff` / `regions map-diff`. To baseline another version, switch to it in Steam (Properties → Betas), let it download, then run — the script **auto-names by the installed version**:
 
 ```bash
 bash scripts/make_baseline.sh        # writes baselines/baseline_{buildings,regions}_v<current>.xlsx
