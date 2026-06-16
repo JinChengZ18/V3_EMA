@@ -40,6 +40,23 @@ _SWATCH_LABELS = {"nodata": "no data", "water": "water"}
 SIGNATURE = ("Econometrics Automation Tool", "map by J.C.")
 
 
+# Legend + watermark sizing, shared by the PNG (draw_legend) and SVG (svg_legend)
+# renderers so the two stay pixel-for-pixel in sync. Enlarged on request: a more
+# prominent bottom-right signature and a slightly larger bottom-left legend card.
+def _legend_dims(scale: float):
+    """Return (ssize, cpad, bar_h, inner_min) for the bottom-left legend card."""
+    ssize = int(min(max(round(17 * scale), 14), 30))      # swatch + tick text
+    cpad = int(min(max(round(16 * scale), 13), 28))       # card padding
+    bar_h = int(min(max(round(19 * scale), 15), 34))      # gradient bar height
+    inner_min = round(290 * scale)                        # min card inner width
+    return ssize, cpad, bar_h, inner_min
+
+
+def _watermark_size(scale: float) -> int:
+    """Font size for the bottom-right signature watermark."""
+    return int(min(max(round(18 * scale), 15), 34))
+
+
 def set_swatch_labels(nodata: str, water: str) -> None:
     _SWATCH_LABELS["nodata"] = nodata
     _SWATCH_LABELS["water"] = water
@@ -478,16 +495,14 @@ def draw_legend(
     margin = max(12, round(w * 0.014))
 
     # ---- legend card bottom-left (sized first so the title can avoid it) ----
-    ssize = int(min(max(round(15 * scale), 13), 26))     # a touch bigger than before
-    cpad = int(min(max(round(15 * scale), 12), 26))
+    ssize, cpad, bar_h, inner_min = _legend_dims(scale)
     gap = max(4, round(ssize * 0.5))
-    bar_h = int(min(max(round(17 * scale), 14), 30))
     sw = ssize
     tyg = 3
     sb = fonts.num(ssize)
     nodata, water = _SWATCH_LABELS["nodata"], _SWATCH_LABELS["water"]
     swrow = sw + 6 + tw(nodata, sb) + round(ssize * 1.4) + sw + 6 + tw(water, sb)
-    inner = max(swrow, round(265 * scale))
+    inner = max(swrow, inner_min)
     cbw = inner + 2 * cpad
     cbh = cpad + bar_h + tyg + ssize + gap + sw + cpad
     cx0 = margin
@@ -555,7 +570,7 @@ def draw_legend(
     d.text((mx + sw + 6, yy + (sw - ssize) // 2), water, font=sb, fill=(96, 84, 70, 255))
 
     # ---- signature watermark, bottom-right (mirrors the legend) ----
-    wsize = int(min(max(round(13 * scale), 11), 22))
+    wsize = _watermark_size(scale)
     wf = fonts.num(wsize)
     lh = wsize + round(wsize * 0.32)
     wtop = h - margin - lh * len(SIGNATURE)
@@ -621,16 +636,14 @@ def svg_legend(index: "ProvinceIndex", fill_img: Image.Image, title: str, subtit
 
     accent = tuple(int(c) for c in table[-1]) if not diverging else (60, 120, 60)
     margin = max(12, round(w * 0.014))
-    ssize = int(min(max(round(15 * scale), 13), 26))
-    cpad = int(min(max(round(15 * scale), 12), 26))
+    ssize, cpad, bar_h, inner_min = _legend_dims(scale)
     gap = max(4, round(ssize * 0.5))
-    bar_h = int(min(max(round(17 * scale), 14), 30))
     sw = ssize
     tyg = 3
     sb = fonts.num(ssize)
     nodata, water = _SWATCH_LABELS["nodata"], _SWATCH_LABELS["water"]
     swrow = sw + 6 + tw(nodata, sb) + round(ssize * 1.4) + sw + 6 + tw(water, sb)
-    inner = max(swrow, round(265 * scale))
+    inner = max(swrow, inner_min)
     cbw = inner + 2 * cpad
     cbh = cpad + bar_h + tyg + ssize + gap + sw + cpad
     cx0 = margin
@@ -698,7 +711,7 @@ def svg_legend(index: "ProvinceIndex", fill_img: Image.Image, title: str, subtit
     p.append(f'<text x="{ocx}" y="{sub_b:.1f}" font-size="{sub_size}" text-anchor="middle" font-family="{_BODY_FAM}" fill="rgb(46,36,26)" stroke-width="{max(1,round(sub_size*0.16))}">{_xml(subtitle)}</text>')
     p.append("</g>")
     # ---- signature watermark, bottom-right ----
-    wsize = int(min(max(round(13 * scale), 11), 22))
+    wsize = _watermark_size(scale)
     lh = wsize + round(wsize * 0.32)
     p.append('<g text-anchor="end" paint-order="stroke" stroke="rgb(255,255,255)" '
              f'stroke-width="{max(1, round(wsize*0.12))}" font-family="{_BODY_FAM}" fill="rgb(70,56,42)">')
