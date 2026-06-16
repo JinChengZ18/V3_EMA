@@ -105,6 +105,10 @@ V3_EAT 的版本变更记录，遵循 [Keep a Changelog](https://keepachangelog.
 - 根 `README.md` / `README.en.md`：地图并入「功能 2：地区资源统计与可视化」小节（2a 表格 + 2b 地图），并新增示例插图（`docs/images/`）。
 - **依赖管理**：新增 [requirements.txt](requirements.txt)（openpyxl / pillow / numpy / scipy），`pip install -r requirements.txt` 一键装齐；`pyproject` 的 `[map]` extra 同步加入 scipy（用于加粗国界，缺失时自动降级）。
 - **一键生成脚本** [scripts/gen_maps.sh](scripts/gen_maps.sh)：跑一遍功能 2b 全部命令/参数，分桶输出到 `out/regions/maps/`，README 已说明（Windows 用 Git Bash）。
+- **内置 1.13.8 基线**：新增 `baselines/baseline_{buildings,regions}_v1.13.8.xlsx`（反映分桶修复后的当前版本），切到新版本后可直接 `diff` / `regions diff` / `regions map-diff` 对比。
+- **地区分桶修复**：近东 / 尼罗河流域 / 大波斯 → 中东，大西洋海岸 → 北美，大哥伦比亚 → 南美，喜马拉雅 → 东亚；不再有「其他」表单，交互 HTML 大洲分组同步修正。
+- **签名水印**：地图右下角（与左下图例对称）标注「Econometrics Automation Tool / map by J.C.」，PNG/SVG/交互 HTML 均有。
+- **改名 EMA → EAT**：包 `v3_ema` → `v3_eat`、命令 `v3-eat` / `python -m v3_eat`、`pyproject`、测试、脚本、全部文档；正文 EMA/V3_EMA → EAT/V3_EAT，中文「计量经济自动化模组」→「计量经济自动化工具」。
 
 ---
 
