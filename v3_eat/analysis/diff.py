@@ -1,4 +1,4 @@
-"""Cross-version diff: read two V3_EMA xlsx reports, compute structural and
+"""Cross-version diff: read two V3_EAT xlsx reports, compute structural and
 numeric deltas, regardless of which UI language each was generated in.
 
 The trick: each xlsx column has a translated header (e.g. "建筑" or

@@ -171,6 +171,9 @@ _TEMPLATE = """<!DOCTYPE html>
   #viewport {{ position:relative; overflow:hidden; border:1px solid var(--line);
                border-radius:6px; background:#dfe9f2; }}
   #map {{ display:block; width:100%; height:auto; transform-origin:0 0; transition:transform .35s ease; }}
+  #sig {{ position:absolute; right:12px; bottom:10px; pointer-events:none; text-align:right;
+          font:italic 12px Georgia,serif; color:#5a4a3a; opacity:0.82;
+          text-shadow:0 1px 2px #ffffffcc; line-height:1.35; }}
   #legend {{ display:flex; align-items:center; gap:10px; margin-top:12px; color:var(--muted); flex-wrap:wrap; }}
   #bar {{ width:300px; height:14px; border:1px solid var(--line); border-radius:3px; }}
   .sw {{ display:inline-block; width:13px; height:13px; border:1px solid #999; border-radius:2px; vertical-align:-2px; margin:0 4px 0 14px; }}
@@ -201,7 +204,7 @@ _TEMPLATE = """<!DOCTYPE html>
   <span id="vlabel"></span>
 </div>
 <div id="wrap">
-  <div id="viewport"><canvas id="map"></canvas></div>
+  <div id="viewport"><canvas id="map"></canvas><div id="sig">Econometrics Automation Tool<br>map by J.C.</div></div>
   <div id="legend">
     <span id="mlabel"></span>
     <span id="lo"></span><canvas id="bar" width="300" height="14"></canvas><span id="hi"></span>

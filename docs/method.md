@@ -1,8 +1,8 @@
-# V3_EMA — 实现细节与设计文档
+# V3_EAT — 实现细节与设计文档
 
 **中文** | [English](method.en.md)
 
-本文记录 V3_EMA 的内部架构、数据流、输出 schema 与跨版本差分的实现。面向打算扩展或集成本工具的开发者；普通使用者只需看 [README](../README.md) 即可。
+本文记录 V3_EAT 的内部架构、数据流、输出 schema 与跨版本差分的实现。面向打算扩展或集成本工具的开发者；普通使用者只需看 [README](../README.md) 即可。
 
 经济学层面的指标定义、简化公理与无偏性讨论见 [economics.md](economics.md)。
 
@@ -23,17 +23,17 @@ common/{goods,pop_types,                   ┌── 总览 sheet
 GameData (model.py)              ──────────►├── 信息 sheet (game_version, counts)
    ↓                                        │
 build_rows / build_construction_rows        ↓
-(analysis/rows.py, analysis/construction.py)   v3_ema_report.xlsx
+(analysis/rows.py, analysis/construction.py)   v3_eat_report.xlsx
 
 旧报告 ┐
         ├── read_report → diff_snapshots ─► 信息/新增/移除/变更 sheet
-新报告 ┘                                    v3_ema_diff.xlsx
+新报告 ┘                                    v3_eat_diff.xlsx
 ```
 
 ## 2. 模块结构
 
 ```
-v3_ema/
+v3_eat/
 ├── parser/
 │   ├── pdx_tokenizer.py      # PDX 词法分析（处理 ?= != hsv{} 等特殊语法）
 │   ├── pdx_parser.py         # 递归下降语法分析 + 目录批量加载
@@ -53,12 +53,12 @@ v3_ema/
 │   ├── logging.py
 │   └── strings.py            # BG_BUCKET 宏分类、PMG 类别推导
 ├── cli.py                    # argparse 命令分发
-└── __main__.py               # 支持 python -m v3_ema
+└── __main__.py               # 支持 python -m v3_eat
 ```
 
 ## 3. 输出 Schema
 
-### v3_ema_report.xlsx
+### v3_eat_report.xlsx
 
 | Sheet | 内容 |
 |---|---|
@@ -76,7 +76,7 @@ v3_ema/
 | 建筑ID | 基础_ID | 次要_ID | 自动化_ID
 ```
 
-### v3_ema_diff.xlsx
+### v3_eat_diff.xlsx
 
 | Sheet | 内容 |
 |---|---|
@@ -91,16 +91,16 @@ v3_ema/
 
 - 游戏版本（`launcher-settings.json` 的 `version` 字段，如 `1.13.4 (Matcha)`）
 - 原始版本号（`rawVersion` 字段）
-- 工具版本（`v3_ema.__version__`）
+- 工具版本（`v3_eat.__version__`）
 - 生成时间戳（ISO-8601 本地时间）
 - 解析对象计数（商品/工种/PM/PMG/建筑/组合行/建造部门行）
 
-任何 V3_EMA 输出 xlsx 都能精确定位到一个 (game_version, tool_version) 二元组。`diff` 命令读取双方的「信息」sheet 后会在差异工作簿中展示这个二元组对照。
+任何 V3_EAT 输出 xlsx 都能精确定位到一个 (game_version, tool_version) 二元组。`diff` 命令读取双方的「信息」sheet 后会在差异工作簿中展示这个二元组对照。
 
 ## 5. 跨版本差分实现
 
 ```bash
-python -m v3_ema diff <old.xlsx> <new.xlsx> [--out diff.xlsx] [--eps-abs 0.01] [--eps-rel 0.005]
+python -m v3_eat diff <old.xlsx> <new.xlsx> [--out diff.xlsx] [--eps-abs 0.01] [--eps-rel 0.005]
 ```
 
 ### 5.1 键定义

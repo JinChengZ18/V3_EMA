@@ -111,7 +111,7 @@ def _write_info_sheet(wb: Workbook, meta: ReportMeta, ui: UI) -> None:
         (ui["meta_game_version"], meta.game_version or ui["meta_unknown"]),
         (ui["meta_raw_version"],  meta.raw_version or ui["meta_unknown"]),
         (ui["meta_generated_at"], meta.generated_at),
-        (ui["meta_tool_version"], f"V3_EMA {meta.tool_version}"),
+        (ui["meta_tool_version"], f"V3_EAT {meta.tool_version}"),
         (ui["meta_data_lang"],    meta.data_lang or ui["meta_unknown"]),
         (ui["meta_ui_lang"],      meta.ui_lang or ui["meta_unknown"]),
     ]
@@ -297,10 +297,10 @@ def write_regions_xlsx(
     if map_images:
         _write_maps_sheet(wb, ui, map_images)
 
-    wb.properties.title = f"V3_EMA Regions Report — V3 {meta.raw_version or '?'}"
-    wb.properties.creator = "V3_EMA"
+    wb.properties.title = f"V3_EAT Regions Report — V3 {meta.raw_version or '?'}"
+    wb.properties.creator = "V3_EAT"
     wb.properties.description = (
-        f"Game: {meta.game_version} | Tool: V3_EMA {meta.tool_version} | "
+        f"Game: {meta.game_version} | Tool: V3_EAT {meta.tool_version} | "
         f"Generated: {meta.generated_at} | Data: {meta.data_lang} | UI: {meta.ui_lang}"
     )
 

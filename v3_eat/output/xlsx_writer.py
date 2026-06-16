@@ -31,7 +31,7 @@ class ReportMeta:
     @property
     def workbook_title(self) -> str:
         v = self.raw_version or self.game_version or "unknown"
-        return f"V3_EMA Report — V3 {v}"
+        return f"V3_EAT Report — V3 {v}"
 
 
 # --- Modern palette (Tailwind-style neutrals + indigo accent) -----------------
@@ -327,7 +327,7 @@ def _write_info_sheet(wb: Workbook, meta: ReportMeta, ui: UI) -> Worksheet:
         (ui["meta_game_version"], meta.game_version or ui["meta_unknown"]),
         (ui["meta_raw_version"],  meta.raw_version or ui["meta_unknown"]),
         (ui["meta_generated_at"], meta.generated_at),
-        (ui["meta_tool_version"], f"V3_EMA {meta.tool_version}"),
+        (ui["meta_tool_version"], f"V3_EAT {meta.tool_version}"),
         (ui["meta_data_lang"],    meta.data_lang or ui["meta_unknown"]),
         (ui["meta_ui_lang"],      meta.ui_lang or ui["meta_unknown"]),
     ]
@@ -402,9 +402,9 @@ def write_xlsx(
         _write_construction_sheet(wb, construction_list, ui)
 
     wb.properties.title = meta.workbook_title
-    wb.properties.creator = "V3_EMA"
+    wb.properties.creator = "V3_EAT"
     wb.properties.description = (
-        f"Game: {meta.game_version} | Tool: V3_EMA {meta.tool_version} | "
+        f"Game: {meta.game_version} | Tool: V3_EAT {meta.tool_version} | "
         f"Generated: {meta.generated_at} | Data: {meta.data_lang} | UI: {meta.ui_lang}"
     )
 

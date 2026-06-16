@@ -1,6 +1,6 @@
-"""Tests for V3_EMA diff workflow.
+"""Tests for V3_EAT diff workflow.
 
-Synthetic fixtures: build two minimal V3_EMA-style xlsx reports programmatically
+Synthetic fixtures: build two minimal V3_EAT-style xlsx reports programmatically
 using the real `xlsx_writer`, then run `diff_snapshots` and assert added /
 removed / changed buckets are populated correctly.
 
@@ -17,11 +17,11 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT))
 
-from v3_ema.analysis.construction import ConstructionRow
-from v3_ema.analysis.diff import diff_snapshots, read_report
-from v3_ema.analysis.rows import Row
-from v3_ema.output.diff_writer import write_diff_xlsx
-from v3_ema.output.xlsx_writer import ReportMeta, write_xlsx
+from v3_eat.analysis.construction import ConstructionRow
+from v3_eat.analysis.diff import diff_snapshots, read_report
+from v3_eat.analysis.rows import Row
+from v3_eat.output.diff_writer import write_diff_xlsx
+from v3_eat.output.xlsx_writer import ReportMeta, write_xlsx
 
 
 def _row(building_id: str, base_id: str, secondary_id: str, automation_id: str,
@@ -245,9 +245,9 @@ def test_regions_diff(tmp_path: Path | None = None) -> None:
     if tmp_path is None:
         tmp_path = Path(tempfile.mkdtemp())
 
-    from v3_ema.analysis.regions import RegionRow
-    from v3_ema.analysis.regions_diff import diff_regions_snapshots, read_regions_report
-    from v3_ema.output.regions_writer import write_regions_xlsx
+    from v3_eat.analysis.regions import RegionRow
+    from v3_eat.analysis.regions_diff import diff_regions_snapshots, read_regions_report
+    from v3_eat.output.regions_writer import write_regions_xlsx
 
     def mk(state_id: str, **kwargs) -> RegionRow:
         defaults = dict(
@@ -307,9 +307,9 @@ def test_regions_diff_cross_lang(tmp_path: Path | None = None) -> None:
     if tmp_path is None:
         tmp_path = Path(tempfile.mkdtemp())
 
-    from v3_ema.analysis.regions import RegionRow
-    from v3_ema.analysis.regions_diff import diff_regions_snapshots, read_regions_report
-    from v3_ema.output.regions_writer import write_regions_xlsx
+    from v3_eat.analysis.regions import RegionRow
+    from v3_eat.analysis.regions_diff import diff_regions_snapshots, read_regions_report
+    from v3_eat.output.regions_writer import write_regions_xlsx
 
     def mk_zh():
         return RegionRow(

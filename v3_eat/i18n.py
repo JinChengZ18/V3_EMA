@@ -89,7 +89,7 @@ _TRANSLATIONS: dict[str, dict[str, str]] = {
     "cat_ownership":       {"zh": "所有权",     "en": "Ownership"},
 
     # --- Info-sheet meta labels ---
-    "meta_title":          {"zh": "V3_EMA 报告",   "en": "V3_EMA Report"},
+    "meta_title":          {"zh": "V3_EAT 报告",   "en": "V3_EAT Report"},
     "meta_game_version":   {"zh": "游戏版本",       "en": "Game Version"},
     "meta_raw_version":    {"zh": "数据版本",       "en": "Raw Version"},
     "meta_generated_at":   {"zh": "生成时间",       "en": "Generated At"},
@@ -107,7 +107,7 @@ _TRANSLATIONS: dict[str, dict[str, str]] = {
     "count_construction_rows": {"zh": "建造部门行", "en": "Construction Rows"},
 
     # --- Diff info-sheet labels ---
-    "diff_title":          {"zh": "V3_EMA 差异报告",   "en": "V3_EMA Diff Report"},
+    "diff_title":          {"zh": "V3_EAT 差异报告",   "en": "V3_EAT Diff Report"},
     "diff_old_game":       {"zh": "旧版本游戏",         "en": "Old Game Version"},
     "diff_old_generated":  {"zh": "旧版本生成于",       "en": "Old Generated At"},
     "diff_new_game":       {"zh": "新版本游戏",         "en": "New Game Version"},

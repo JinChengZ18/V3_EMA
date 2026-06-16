@@ -127,6 +127,9 @@ _TEMPLATE = """<!DOCTYPE html>
                border-radius:6px; background:#dfe9f2; box-shadow:0 1px 4px #0002; }}
   #map {{ display:block; cursor:grab; touch-action:none; }}
   #map.drag {{ cursor:grabbing; }}
+  #sig {{ position:absolute; right:12px; bottom:10px; pointer-events:none; text-align:right;
+          font:italic 12px Georgia,"Times New Roman",serif; color:#5a4a3a;
+          opacity:0.82; text-shadow:0 1px 2px #ffffffcc, 0 0 2px #ffffffcc; line-height:1.35; }}
   #legend {{ display:flex; align-items:center; gap:10px; margin-top:12px;
              color:var(--muted); flex-wrap:wrap; }}
   #bar {{ width:280px; height:14px; border:1px solid var(--line); border-radius:3px; }}
@@ -156,7 +159,7 @@ _TEMPLATE = """<!DOCTYPE html>
   </div>
 </header>
 <div id="wrap">
-  <div id="viewport"><canvas id="map"></canvas></div>
+  <div id="viewport"><canvas id="map"></canvas><div id="sig">Econometrics Automation Tool<br>map by J.C.</div></div>
   <div id="legend">
     <span id="mlabel"></span>
     <span>0</span><canvas id="bar" width="280" height="14"></canvas><span id="vmax"></span>

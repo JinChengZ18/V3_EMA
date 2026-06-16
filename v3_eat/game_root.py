@@ -1,17 +1,17 @@
 """Locate the Victoria 3 install directory.
 
-V3_EMA used to require being placed inside the game folder (sibling to
+V3_EAT used to require being placed inside the game folder (sibling to
 `game/` and `launcher/`). That broke whenever Steam validated files or
-patched the game and removed our project. Now V3_EMA can live anywhere
+patched the game and removed our project. Now V3_EAT can live anywhere
 and locates the game via this resolver.
 
 Resolution order (first hit wins):
     1. explicit `--game-root <path>` CLI arg
     2. `V3_GAME_ROOT` environment variable
-    3. cached path at `<V3_EMA>/.game_root` (written automatically after a
-       successful auto-detect or by `v3-ema config --game-root`)
+    3. cached path at `<V3_EAT>/.game_root` (written automatically after a
+       successful auto-detect or by `v3-eat config --game-root`)
     4. Steam library scan (libraryfolders.vdf + Windows registry)
-    5. legacy walk-up: parents of the V3_EMA directory itself, in case the
+    5. legacy walk-up: parents of the V3_EAT directory itself, in case the
        project is still installed inside the game root
     6. raise FileNotFoundError with help text
 """
@@ -24,7 +24,7 @@ CACHE_FILENAME = ".game_root"
 
 
 def _project_root() -> Path:
-    """Directory containing the v3_ema/ package (i.e. the V3_EMA project root)."""
+    """Directory containing the v3_eat/ package (i.e. the V3_EAT project root)."""
     return Path(__file__).resolve().parent.parent
 
 
@@ -190,9 +190,9 @@ def find_game_root(explicit: Path | None = None) -> Path:
 
     raise FileNotFoundError(
         "Could not locate Victoria 3 install. Try one of:\n"
-        "  • python -m v3_ema config --game-root <path>     "
+        "  • python -m v3_eat config --game-root <path>     "
         "(saves to .game_root for next time)\n"
-        "  • python -m v3_ema <cmd> --game-root <path>      "
+        "  • python -m v3_eat <cmd> --game-root <path>      "
         "(one-off override)\n"
         "  • set V3_GAME_ROOT=<path>                        "
         "(environment variable)\n"

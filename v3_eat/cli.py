@@ -69,7 +69,7 @@ def _add_common_args(p: argparse.ArgumentParser) -> None:
     p.add_argument("--game-root", type=Path, default=None,
                    help="Victoria 3 install root (parent of game/). If omitted, "
                         "auto-detected from Steam libraries; cached after first "
-                        "successful detection. See `v3-ema config --help`.")
+                        "successful detection. See `v3-eat config --help`.")
     p.add_argument("--lang", default="simp_chinese",
                    help="Game-data localization language (e.g. simp_chinese, english, "
                         "french, german, japanese, korean, polish, russian, spanish, "
@@ -367,7 +367,7 @@ def cmd_regions_map(args: argparse.Namespace) -> int:
         from .map.writer import generate  # lazy: keeps Pillow/numpy optional
     except ImportError as e:
         log.error("Map rendering needs Pillow and numpy: %s", e)
-        log.error('Install them with:  python -m pip install "v3_ema[map]"   '
+        log.error('Install them with:  python -m pip install "v3_eat[map]"   '
                   "(or: python -m pip install pillow numpy)")
         return 2
 
@@ -429,7 +429,7 @@ def cmd_regions_map_diff(args: argparse.Namespace) -> int:
         from .map.diff import generate_diff
     except ImportError as e:
         log.error("Map rendering needs Pillow and numpy: %s", e)
-        log.error('Install them with:  python -m pip install "v3_ema[map]"')
+        log.error('Install them with:  python -m pip install "v3_eat[map]"')
         return 2
 
     game_root = _resolve_game_root(args)
@@ -683,7 +683,7 @@ def cmd_demography_report(args: argparse.Namespace) -> int:
 
 
 def cmd_config(args: argparse.Namespace) -> int:
-    """Manage the cached game-root path (`<V3_EMA>/.game_root`)."""
+    """Manage the cached game-root path (`<V3_EAT>/.game_root`)."""
     if args.show:
         cached = load_cached()
         if cached is not None:
@@ -734,7 +734,7 @@ def cmd_dump_pm(args: argparse.Namespace) -> int:
 
 
 def main(argv: list[str] | None = None) -> int:
-    p = argparse.ArgumentParser(prog="v3-ema", description="V3_EMA — Victoria 3 Econometrics Automation")
+    p = argparse.ArgumentParser(prog="v3-eat", description="V3_EAT — Victoria 3 Econometrics Automation")
     p.add_argument("--version", action="version", version=__version__)
     sub = p.add_subparsers(dest="cmd", required=True)
 
@@ -767,7 +767,7 @@ def main(argv: list[str] | None = None) -> int:
                    help="Delete the cached path; next run re-detects from scratch")
     p_config.set_defaults(func=cmd_config)
 
-    p_diff = sub.add_parser("diff", help="Compare two V3_EMA xlsx reports across versions")
+    p_diff = sub.add_parser("diff", help="Compare two V3_EAT xlsx reports across versions")
     p_diff.add_argument("old", type=Path, help="Older xlsx report path")
     p_diff.add_argument("new", type=Path, help="Newer xlsx report path")
     p_diff.add_argument("--out", type=Path, default=None,

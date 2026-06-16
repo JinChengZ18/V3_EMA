@@ -1,14 +1,14 @@
-# EMA — Victoria 3 计量经济自动化模组
+# EAT — Victoria 3 计量经济自动化工具
 
 **中文** | [English](README.en.md)
 
-Econometrics Automation，即EMA模组，是一套V3计量经济学研究的全自动管线工具。它并不涉及游戏内容的任何修改，而是从本地文件提取数据，进行表格归档、可视化、地图绘制等工作。
+Econometrics Automation Tool，即EAT模组，是一套V3计量经济学研究的全自动管线工具。它并不涉及游戏内容的任何修改，而是从本地文件提取数据，进行表格归档、可视化、地图绘制等工作。
 
 ### 为什么做这个模组？
 
 Victoria 3 中的经济决策空间由 ~440 种生产方式（PM）、~200 个生产方式组（PMG）、~110 座建筑构成，理论组合空间 1500 余种。任何依赖人工抄表的经济分析都容易在每次补丁后陈旧，毕竟你永远不知道P社究竟暗改了什么（或者他们写在了某次日志里，但你已经很久没玩V3了），这一方面给维护者带来了痛苦，另一方面也使得玩家不可避免地遭受过时攻略的困扰。
 
-EMA可以方便快捷地实现端到端的V3经济分析，从而解决上述问题：
+EAT可以方便快捷地实现端到端的V3经济分析，从而解决上述问题：
 
 - 一行命令，**当前版本**全部 1500+ 组合的经济指标导出 Excel
 - 一行命令，**两个版本**的报表做差分，精确告诉玩家哪些建筑、哪些字段被改了多少
@@ -21,11 +21,11 @@ EMA可以方便快捷地实现端到端的V3经济分析，从而解决上述问
 
 ### 第一步：解压到任意位置
 
-把 `V3_EMA` 文件夹放在你喜欢的任何地方都可以（**不必再放进游戏目录**，避免被 Steam 校验文件时误删）。常见的位置如 `D:\tools\V3_EMA\` 或 `C:\Users\你\Documents\V3_EMA\`。
+把 `V3_EAT` 文件夹放在你喜欢的任何地方都可以（**不必再放进游戏目录**，避免被 Steam 校验文件时误删）。常见的位置如 `D:\tools\V3_EAT\` 或 `C:\Users\你\Documents\V3_EAT\`。
 
 ### 第二步：装 Python 与依赖
 
-需要 Python ≥ 3.10。在 V3_EMA 目录打开 PowerShell，一键装齐全部依赖：
+需要 Python ≥ 3.10。在 V3_EAT 目录打开 PowerShell，一键装齐全部依赖：
 
 ```powershell
 python -m pip install -r requirements.txt
@@ -41,23 +41,23 @@ python -m pip install -r requirements.txt
 
 1. CLI 参数 `--game-root <path>`（一次性覆盖）
 2. 环境变量 `V3_GAME_ROOT`
-3. 缓存文件 `<V3_EMA>/.game_root`
+3. 缓存文件 `<V3_EAT>/.game_root`
 4. **自动扫描 Steam 库**（Windows 注册表 + `libraryfolders.vdf`）—— **多数用户到这一步即可**
-5. 如果 V3_EMA 自己就在游戏目录下，向上回溯找到游戏根
+5. 如果 V3_EAT 自己就在游戏目录下，向上回溯找到游戏根
 
 绝大多数情况下你不需要做任何配置。如果自动检测失败，三种解决方式任选其一：
 
 ```powershell
-python -m v3_ema config --game-root "E:\STEAM\steamapps\common\Victoria 3"   # 持久化保存
-python -m v3_ema report --game-root "E:\STEAM\steamapps\common\Victoria 3"    # 单次覆盖
-$env:V3_GAME_ROOT = "E:\STEAM\steamapps\common\Victoria 3"; python -m v3_ema report  # 环境变量
+python -m v3_eat config --game-root "E:\STEAM\steamapps\common\Victoria 3"   # 持久化保存
+python -m v3_eat report --game-root "E:\STEAM\steamapps\common\Victoria 3"    # 单次覆盖
+$env:V3_GAME_ROOT = "E:\STEAM\steamapps\common\Victoria 3"; python -m v3_eat report  # 环境变量
 ```
 
 辅助命令：
 
 ```powershell
-python -m v3_ema config --show     # 查看当前缓存的路径与实际解析路径
-python -m v3_ema config --clear    # 清缓存，下次重新检测
+python -m v3_eat config --show     # 查看当前缓存的路径与实际解析路径
+python -m v3_eat config --clear    # 清缓存，下次重新检测
 ```
 
 
@@ -68,26 +68,26 @@ python -m v3_ema config --clear    # 清缓存，下次重新检测
 
 ```powershell
 # 生成当前版本（默认中文）
-python -m v3_ema report
+python -m v3_eat report
 
 # 跨版本对比 —— 项目内置 1.13.4 基线，可直接用
-python -m v3_ema report --out current.xlsx
-python -m v3_ema diff baseline_buildings_v1.13.4.xlsx current.xlsx
+python -m v3_eat report --out current.xlsx
+python -m v3_eat diff baseline_buildings_v1.13.4.xlsx current.xlsx
 
 # 切换语言（V3 全部 11 种）
-python -m v3_ema report --lang english   --out v3_ema_report_en.xlsx
-python -m v3_ema report --lang french    --out v3_ema_report_fr.xlsx
-python -m v3_ema report --lang german    --out v3_ema_report_gm.xlsx
-python -m v3_ema report --lang japanese  --out v3_ema_report_jp.xlsx
-python -m v3_ema report --lang korean    --out v3_ema_report_kr.xlsx
-python -m v3_ema report --lang polish    --out v3_ema_report_po.xlsx
-python -m v3_ema report --lang russian   --out v3_ema_report_ru.xlsx
-python -m v3_ema report --lang spanish   --out v3_ema_report_sp.xlsx
-python -m v3_ema report --lang turkish   --out v3_ema_report_tu.xlsx
-python -m v3_ema report --lang braz_por  --out v3_ema_report_bp.xlsx
+python -m v3_eat report --lang english   --out v3_eat_report_en.xlsx
+python -m v3_eat report --lang french    --out v3_eat_report_fr.xlsx
+python -m v3_eat report --lang german    --out v3_eat_report_gm.xlsx
+python -m v3_eat report --lang japanese  --out v3_eat_report_jp.xlsx
+python -m v3_eat report --lang korean    --out v3_eat_report_kr.xlsx
+python -m v3_eat report --lang polish    --out v3_eat_report_po.xlsx
+python -m v3_eat report --lang russian   --out v3_eat_report_ru.xlsx
+python -m v3_eat report --lang spanish   --out v3_eat_report_sp.xlsx
+python -m v3_eat report --lang turkish   --out v3_eat_report_tu.xlsx
+python -m v3_eat report --lang braz_por  --out v3_eat_report_bp.xlsx
 ```
 
-输出位置：`V3_EMA\out\buildings\{reports,diffs}\`。
+输出位置：`V3_EAT\out\buildings\{reports,diffs}\`。
 
 报表包含 12 张 sheet：信息 / 总览 / 农业 / 种植园 / 开采业 / 制造业 / 服务业 / 基础设施 / 政府 / 军政 / 纪念物 / 建造部门。每行核心字段：建筑 / 基础-次要-自动化生产方式 / 产出价值 / 投入价值 / 利润 / 建造力 / 劳动力 / 工资倍率 / 建造力回报率 / 人均年产值。Diff 工作簿含「新增-组合 / 移除-组合 / 变更-组合」等 6 张 sheet，变更字段以「旧 / 新 / Δ」三列并排，Δ 自动绿/红着色。
 
@@ -99,26 +99,26 @@ python -m v3_ema report --lang braz_por  --out v3_ema_report_bp.xlsx
 
 ```powershell
 # 生成当前版本（默认中文）
-python -m v3_ema regions report
+python -m v3_eat regions report
 
 # 跨版本对比 —— 项目内置 1.13.4 基线，可直接用
-python -m v3_ema regions report --out current.xlsx
-python -m v3_ema regions diff baseline_regions_v1.13.4.xlsx current.xlsx
+python -m v3_eat regions report --out current.xlsx
+python -m v3_eat regions diff baseline_regions_v1.13.4.xlsx current.xlsx
 
 # 切换语言
-python -m v3_ema regions report --lang english   --out regions_en.xlsx
-python -m v3_ema regions report --lang french    --out regions_fr.xlsx
-python -m v3_ema regions report --lang german    --out regions_gm.xlsx
-python -m v3_ema regions report --lang japanese  --out regions_jp.xlsx
-python -m v3_ema regions report --lang korean    --out regions_kr.xlsx
-python -m v3_ema regions report --lang polish    --out regions_po.xlsx
-python -m v3_ema regions report --lang russian   --out regions_ru.xlsx
-python -m v3_ema regions report --lang spanish   --out regions_sp.xlsx
-python -m v3_ema regions report --lang turkish   --out regions_tu.xlsx
-python -m v3_ema regions report --lang braz_por  --out regions_bp.xlsx
+python -m v3_eat regions report --lang english   --out regions_en.xlsx
+python -m v3_eat regions report --lang french    --out regions_fr.xlsx
+python -m v3_eat regions report --lang german    --out regions_gm.xlsx
+python -m v3_eat regions report --lang japanese  --out regions_jp.xlsx
+python -m v3_eat regions report --lang korean    --out regions_kr.xlsx
+python -m v3_eat regions report --lang polish    --out regions_po.xlsx
+python -m v3_eat regions report --lang russian   --out regions_ru.xlsx
+python -m v3_eat regions report --lang spanish   --out regions_sp.xlsx
+python -m v3_eat regions report --lang turkish   --out regions_tu.xlsx
+python -m v3_eat regions report --lang braz_por  --out regions_bp.xlsx
 ```
 
-输出位置：`V3_EMA\out\regions\{reports,diffs}\`。
+输出位置：`V3_EAT\out\regions\{reports,diffs}\`。
 
 报表按 14 个大洲分桶（西欧 / 南欧 / 北欧 / 东欧 / 北美 / 中美 / 南美 / 非洲 / 中东 / 中亚 / 印度 / 东亚 / 东南亚 / 大洋洲）。**首行是合计**（该桶内全部地区资源总和）。每行核心字段：地区 / 战略大区 / 可耕地 / 可耕作建筑 / 上限总和 / **每种资源的单项列**（铁矿/煤矿/林业营地/油田 等，方便排序对比）/ 总产能容量 / 地区特性。
 
@@ -136,26 +136,26 @@ python -m v3_ema regions report --lang braz_por  --out regions_bp.xlsx
 
 ```powershell
 # 默认：画「总潜能」PNG + 交互式 HTML（深浅 = 资源量，地块标数值）
-python -m v3_ema regions map
+python -m v3_eat regions map
 
 # 单个图层（任一资源建筑 id 或聚合量），默认按资源种类自动配色
-python -m v3_ema regions map --metric building_iron_mine     # 铁矿 → 钢蓝
-python -m v3_ema regions map --all --svg                     # 全部 14 图层，各配一份矢量 SVG
-python -m v3_ema regions map --crops                         # 16 种农作物分布图 → maps/crops/
+python -m v3_eat regions map --metric building_iron_mine     # 铁矿 → 钢蓝
+python -m v3_eat regions map --all --svg                     # 全部 14 图层，各配一份矢量 SVG
+python -m v3_eat regions map --crops                         # 16 种农作物分布图 → maps/crops/
 
 # 国界 / 高清 / 矢量
-python -m v3_ema regions map --metric total_capacity --countries                              # 叠 1836 国界（默认丢部落小国）
-python -m v3_ema regions map --metric total_capacity --countries --country-filter recognized  # 只描列强承认国
-python -m v3_ema regions map --metric building_iron_mine --full-res                           # 原生 8192px
+python -m v3_eat regions map --metric total_capacity --countries                              # 叠 1836 国界（默认丢部落小国）
+python -m v3_eat regions map --metric total_capacity --countries --country-filter recognized  # 只描列强承认国
+python -m v3_eat regions map --metric building_iron_mine --full-res                           # 原生 8192px
 
 # 跨版本变化图（红减绿增，复用功能 2 的两份报表，内置基线开箱即用）
-python -m v3_ema regions map-diff baseline_regions_v1.8.7.xlsx baseline_regions_v1.13.4.xlsx --metric building_coal_mine
+python -m v3_eat regions map-diff baseline_regions_v1.8.7.xlsx baseline_regions_v1.13.4.xlsx --metric building_coal_mine
 
 # 多版本时间线交互图（版本滑块 + Δ变化）
-python -m v3_ema regions map-timeline baseline_regions_v1.8.7.xlsx baseline_regions_v1.13.4.xlsx
+python -m v3_eat regions map-timeline baseline_regions_v1.8.7.xlsx baseline_regions_v1.13.4.xlsx
 
 # 把资源地图直接嵌进上面的 Excel 报表（新增「资源地图」工作表）
-python -m v3_ema regions report --maps
+python -m v3_eat regions report --maps
 ```
 
 输出位置：`out/regions/maps/`（图集 PNG/SVG + 交互 HTML；`diffs/` 变化图、`national/` 国界版、`atlas/` Excel 素材、`showcase/` 高清·国界）。
@@ -164,7 +164,7 @@ python -m v3_ema regions report --maps
 > ```bash
 > bash scripts/gen_maps.sh
 > ```
-> Windows 用 Git Bash 运行（命令都是 `python -m v3_ema …`，PowerShell 用户也可逐条复制）。可选 `PYTHON=py`、`GAME_ROOT="D:/Games/Victoria 3"` 覆盖。产物在 `out/`（git 忽略，仅本地查看）。
+> Windows 用 Git Bash 运行（命令都是 `python -m v3_eat …`，PowerShell 用户也可逐条复制）。可选 `PYTHON=py`、`GAME_ROOT="D:/Games/Victoria 3"` 覆盖。产物在 `out/`（git 忽略，仅本地查看）。
 
 - **PNG**：`map_<metric>.png`，中下方**艺术图例**（资源色块 + 大标题，缩略图也能一眼分辨是哪种资源），每块地标数值、描州界；字体取自游戏 ParadoxVictorian / Playfair / EB Garamond。
 - **交互式 HTML**：`resource_map.html` —— 单文件，浏览器打开即用：下拉切 14 图层、切配色、按大洲缩放、搜地区名、开关数值标注、悬停看「州名 + 数值」。
@@ -177,28 +177,28 @@ python -m v3_ema regions report --maps
 
 ```powershell
 # 生成中英双语 HTML 报告 + CSV 原始数据（默认）
-python -m v3_ema demography report
+python -m v3_eat demography report
 
 # 只出英文
-python -m v3_ema demography report --ui-lang en
+python -m v3_eat demography report --ui-lang en
 # 只出中文
-python -m v3_ema demography report --ui-lang zh
+python -m v3_eat demography report --ui-lang zh
 
 # 自定义投影窗口（默认 100 年、SoL 15、25% → 50% 劳动力比例）
-python -m v3_ema demography report --months 600 --projection-sol 12 \
+python -m v3_eat demography report --months 600 --projection-sol 12 \
     --initial-workforce-ratio 0.20 --projection-target 0.45
 
 # 让 SoL 在 100 年里从 8 线性涨到 14
-python -m v3_ema demography report --sol-start 8 --sol-end 14
+python -m v3_eat demography report --sol-start 8 --sol-end 14
 
 # 跳过对 game/common 的全量扫描（更快，但会丢失 modifier_sources.csv 与图表里的修正频次）
-python -m v3_ema demography report --skip-modifier-scan
+python -m v3_eat demography report --skip-modifier-scan
 
 # 关闭 WORKING_ADULT_RATIO_SKEW_MAXIMUM 偏移模型，回到旧的均匀死亡分摊
-python -m v3_ema demography report --no-skew
+python -m v3_eat demography report --no-skew
 ```
 
-输出位置：`V3_EMA\out\demography\`。
+输出位置：`V3_EAT\out\demography\`。
 
 每次运行产出（默认 `--ui-lang both`）：
 
@@ -211,13 +211,13 @@ python -m v3_ema demography report --no-skew
 - `pollution_impact_examples.csv` — 污染生成 → impact 的稳态对照
 - `pollution_dynamics.csv` — 污染瞬态月度演化
 
-报告基于游戏 `defines/00_defines.txt` 中的人口曲线、`laws/00_health_system.txt` 的医疗法律、`laws/00_rights_of_women.txt` 的女权法律、`static_modifiers/00_code_static_modifiers.txt` 的识字率与饥荒静态修正等。法律 / 医疗 / 饥荒数值默认从 `game/common` 实时解析（`--scenarios-from game`），过期的硬编码值会被自动覆盖；`--scenarios-from hardcoded` 退回到 `v3_ema/demography/scenarios.py` 内的常量。
+报告基于游戏 `defines/00_defines.txt` 中的人口曲线、`laws/00_health_system.txt` 的医疗法律、`laws/00_rights_of_women.txt` 的女权法律、`static_modifiers/00_code_static_modifiers.txt` 的识字率与饥荒静态修正等。法律 / 医疗 / 饥荒数值默认从 `game/common` 实时解析（`--scenarios-from game`），过期的硬编码值会被自动覆盖；`--scenarios-from hardcoded` 退回到 `v3_eat/demography/scenarios.py` 内的常量。
 
 ### 工具命令
 
 ```powershell
-python -m v3_ema verify                       # 自检（确认能正确解析当前游戏）
-python -m v3_ema dump-pm pm_simple_farming    # 调试单个生产方式的解析结果
+python -m v3_eat verify                       # 自检（确认能正确解析当前游戏）
+python -m v3_eat dump-pm pm_simple_farming    # 调试单个生产方式的解析结果
 python tests\test_diff.py                     # 跑测例（应有 6 个 PASS）
 ```
 

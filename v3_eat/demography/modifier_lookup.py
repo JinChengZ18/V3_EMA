@@ -5,7 +5,7 @@ audit list with source-line info). ``parse_modifier_block`` lets calling code
 read e.g. ``law_public_health`` and pull its ``state_mortality_mult`` value
 directly, without depending on hand-synced constants.
 
-Implementation uses ``v3_ema.parser.pdx_parser`` to correctly handle nested
+Implementation uses ``v3_eat.parser.pdx_parser`` to correctly handle nested
 syntax and comments. Scenario construction can opt in to this lookup; the
 default scenarios in ``scenarios.py`` still ship hardcoded values so the
 report's baseline output is reproducible without a game install.
@@ -15,7 +15,7 @@ from __future__ import annotations
 from pathlib import Path
 from typing import Any
 
-from v3_ema.parser.pdx_parser import parse_file
+from v3_eat.parser.pdx_parser import parse_file
 
 
 _NUMERIC_KEY_HINTS = (

@@ -1,4 +1,4 @@
-"""Tests for the v3_ema.demography package.
+"""Tests for the v3_eat.demography package.
 
 Runnable two ways:
     pytest tests/test_demography.py
@@ -14,8 +14,8 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT))
 
-from v3_ema.demography.constants import PopGrowthConstants
-from v3_ema.demography.model import (
+from v3_eat.demography.constants import PopGrowthConstants
+from v3_eat.demography.model import (
     Scenario,
     adjusted_rates,
     base_birth_rate,
@@ -25,14 +25,14 @@ from v3_ema.demography.model import (
     simulate_pollution,
     sol_to_wealth,
 )
-from v3_ema.demography.modifier_lookup import parse_modifier_block
-from v3_ema.demography.modifier_scan import is_tracked_modifier_key
-from v3_ema.demography.report import workforce_chart_bounds
-from v3_ema.demography.scenarios import (
+from v3_eat.demography.modifier_lookup import parse_modifier_block
+from v3_eat.demography.modifier_scan import is_tracked_modifier_key
+from v3_eat.demography.report import workforce_chart_bounds
+from v3_eat.demography.scenarios import (
     default_scenarios,
     workforce_sensitivity_scenarios,
 )
-from v3_ema.demography.util import clamp, integer_percent_ticks, pct
+from v3_eat.demography.util import clamp, integer_percent_ticks, pct
 
 
 # ---- Fixture text -----------------------------------------------------------
@@ -368,13 +368,13 @@ def test_workforce_chart_bounds_expands_for_high_target() -> None:
 # ---- Analysis report --------------------------------------------------------
 
 def _build_minimal_analysis_inputs():
-    from v3_ema.demography.rows import (
+    from v3_eat.demography.rows import (
         make_grouped_rates_rows,
         make_projection_rows,
         make_rates_rows,
         make_workforce_sensitivity_rows,
     )
-    from v3_ema.demography.scenarios import (
+    from v3_eat.demography.scenarios import (
         default_scenarios,
         population_growth_sensitivity_scenarios,
         workforce_sensitivity_scenarios,
@@ -408,7 +408,7 @@ def _build_minimal_analysis_inputs():
 
 
 def test_build_analysis_report_emits_both_languages() -> None:
-    from v3_ema.demography.report import build_analysis_report
+    from v3_eat.demography.report import build_analysis_report
 
     c, rates, proj, growth_sens, sens = _build_minimal_analysis_inputs()
     common_kwargs = dict(
@@ -550,7 +550,7 @@ def test_simulate_pollution_zero_generation_stays_zero() -> None:
 
 
 def test_build_analysis_report_zh_back_compat_shim() -> None:
-    from v3_ema.demography.report import build_analysis_report_zh
+    from v3_eat.demography.report import build_analysis_report_zh
 
     c, rates, proj, growth_sens, sens = _build_minimal_analysis_inputs()
     out = build_analysis_report_zh(

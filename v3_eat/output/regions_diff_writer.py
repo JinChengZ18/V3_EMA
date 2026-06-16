@@ -292,6 +292,6 @@ def write_regions_diff_xlsx(
         else:
             _write_changed_sheet(wb, sheet_name, rows, layout, ui)
 
-    wb.properties.title = "V3_EMA Regions Diff"
-    wb.properties.creator = "V3_EMA"
+    wb.properties.title = "V3_EAT Regions Diff"
+    wb.properties.creator = "V3_EAT"
     wb.save(path)

@@ -1,8 +1,8 @@
-# V3_EMA — Implementation Details & Design Notes
+# V3_EAT — Implementation Details & Design Notes
 
 [中文](method.md) | **English**
 
-This document records V3_EMA's internal architecture, data flow, output schema, and cross-version diff implementation. Targets developers who plan to extend or integrate the tool; regular users only need [README](../README.en.md).
+This document records V3_EAT's internal architecture, data flow, output schema, and cross-version diff implementation. Targets developers who plan to extend or integrate the tool; regular users only need [README](../README.en.md).
 
 For metric definitions, simplifying axioms, and unbiasedness discussion, see [economics.en.md](economics.en.md).
 
@@ -23,17 +23,17 @@ common/{goods,pop_types,                   ┌── Overview sheet
 GameData (model.py)              ──────────►├── Info sheet (game_version, counts, ui_lang)
    ↓                                        │
 build_rows / build_construction_rows        ↓
-(analysis/rows.py, analysis/construction.py)   v3_ema_report.xlsx
+(analysis/rows.py, analysis/construction.py)   v3_eat_report.xlsx
 
 Old report ┐
             ├── read_report → diff_snapshots ─► Info / Added / Removed / Changed sheets
-New report ┘                                   v3_ema_diff.xlsx
+New report ┘                                   v3_eat_diff.xlsx
 ```
 
 ## 2. Module Structure
 
 ```
-v3_ema/
+v3_eat/
 ├── parser/
 │   ├── pdx_tokenizer.py      # PDX lexer (handles ?= != hsv{} etc.)
 │   ├── pdx_parser.py         # Recursive-descent parser + directory bulk loader
@@ -54,12 +54,12 @@ v3_ema/
 │   ├── logging.py
 │   └── strings.py            # BG_BUCKET (canonical bucket ids), PMG-category derivation, pm_notes formatting
 ├── cli.py                    # argparse command dispatch
-└── __main__.py               # Supports `python -m v3_ema`
+└── __main__.py               # Supports `python -m v3_eat`
 ```
 
 ## 3. Output Schema
 
-### v3_ema_report.xlsx
+### v3_eat_report.xlsx
 
 | Sheet | Contents |
 |---|---|
@@ -77,7 +77,7 @@ Building | Base PM | Secondary PM | Automation PM | Default Ownership
 | Building ID | Base_ID | Secondary_ID | Automation_ID | Ownership_ID
 ```
 
-### v3_ema_diff.xlsx
+### v3_eat_diff.xlsx
 
 | Sheet | Contents |
 |---|---|
@@ -92,13 +92,13 @@ Every generated xlsx records, in both the Info sheet and workbook properties:
 
 - Game version (from `launcher-settings.json`'s `version` field, e.g. `1.13.4 (Matcha)`)
 - Raw version (`rawVersion` field)
-- Tool version (`v3_ema.__version__`)
+- Tool version (`v3_eat.__version__`)
 - Generation timestamp (ISO-8601, local time)
 - Data language (which `localization/<lang>` was used)
 - UI language (`zh` or `en`)
 - Object counts (goods/pops/PMs/PMGs/buildings/combo rows/construction rows)
 
-Any V3_EMA xlsx output uniquely identifies a (game_version, tool_version, data_lang, ui_lang) tuple. The `diff` command reads both reports' Info sheets and surfaces this tuple comparison in the diff workbook.
+Any V3_EAT xlsx output uniquely identifies a (game_version, tool_version, data_lang, ui_lang) tuple. The `diff` command reads both reports' Info sheets and surfaces this tuple comparison in the diff workbook.
 
 ## 5. Multi-Language Support
 
@@ -117,7 +117,7 @@ The diff output workbook itself is rendered in the diff command's chosen `--ui-l
 ## 6. Cross-Version Diff Implementation
 
 ```bash
-python -m v3_ema diff <old.xlsx> <new.xlsx> [--out diff.xlsx] [--ui-lang zh|en|auto] [--eps-abs 0.01] [--eps-rel 0.005]
+python -m v3_eat diff <old.xlsx> <new.xlsx> [--out diff.xlsx] [--ui-lang zh|en|auto] [--eps-abs 0.01] [--eps-rel 0.005]
 ```
 
 ### 6.1 Key Definition

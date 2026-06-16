@@ -36,6 +36,9 @@ GRID_INK = (120, 110, 95)      # reference graticule
 _HEX = re.compile(r"x([0-9A-Fa-f]{6})")
 _SWATCH_LABELS = {"nodata": "no data", "water": "water"}
 
+# Signature watermark drawn bottom-right (mirrors the bottom-left legend).
+SIGNATURE = ("Econometrics Automation Tool", "map by J.C.")
+
 
 def set_swatch_labels(nodata: str, water: str) -> None:
     _SWATCH_LABELS["nodata"] = nodata
@@ -551,6 +554,16 @@ def draw_legend(
     d.rectangle([mx, yy, mx + sw, yy + sw], fill=(*WATER, 255), outline=(170, 160, 145, 255))
     d.text((mx + sw + 6, yy + (sw - ssize) // 2), water, font=sb, fill=(96, 84, 70, 255))
 
+    # ---- signature watermark, bottom-right (mirrors the legend) ----
+    wsize = int(min(max(round(13 * scale), 11), 22))
+    wf = fonts.num(wsize)
+    lh = wsize + round(wsize * 0.32)
+    wtop = h - margin - lh * len(SIGNATURE)
+    for i, line in enumerate(SIGNATURE):
+        d.text((w - margin - tw(line, wf), wtop + i * lh), line, font=wf,
+               fill=(70, 56, 42, 215), stroke_width=max(1, round(wsize * 0.12)),
+               stroke_fill=(255, 255, 255, 205))
+
     return Image.alpha_composite(base, ov).convert("RGB")
 
 
@@ -683,6 +696,15 @@ def svg_legend(index: "ProvinceIndex", fill_img: Image.Image, title: str, subtit
     p.append(f'<rect x="{row_x}" y="{cyc}" width="{chip}" height="{chip}" rx="{rr}" fill="{fill_chip}" stroke-width="{swd}"/>')
     p.append(f'<text x="{row_x+chip+chip_gap}" y="{title_b:.1f}" font-size="{big}" font-family="{_TITLE_FAM}" fill="rgb(28,20,12)" stroke-width="{swd}">{_xml(title)}</text>')
     p.append(f'<text x="{ocx}" y="{sub_b:.1f}" font-size="{sub_size}" text-anchor="middle" font-family="{_BODY_FAM}" fill="rgb(46,36,26)" stroke-width="{max(1,round(sub_size*0.16))}">{_xml(subtitle)}</text>')
+    p.append("</g>")
+    # ---- signature watermark, bottom-right ----
+    wsize = int(min(max(round(13 * scale), 11), 22))
+    lh = wsize + round(wsize * 0.32)
+    p.append('<g text-anchor="end" paint-order="stroke" stroke="rgb(255,255,255)" '
+             f'stroke-width="{max(1, round(wsize*0.12))}" font-family="{_BODY_FAM}" fill="rgb(70,56,42)">')
+    for i, line in enumerate(SIGNATURE):
+        wy = h - margin - lh * (len(SIGNATURE) - i) + wsize * 0.80
+        p.append(f'<text x="{w-margin}" y="{wy:.1f}" font-size="{wsize}">{_xml(line)}</text>')
     p.append("</g>")
     return "\n".join(p)
 

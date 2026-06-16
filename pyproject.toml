@@ -1,7 +1,7 @@
 [project]
-name = "v3_ema"
+name = "v3_eat"
 version = "0.5.0"
-description = "Victoria 3 Econometrics Automation (V3_EMA): parses game script data and produces an Excel report of building/production-method economics."
+description = "Victoria 3 Econometrics Automation (V3_EAT): parses game script data and produces an Excel report of building/production-method economics."
 requires-python = ">=3.10"
 dependencies = [
     "openpyxl>=3.1",
@@ -14,7 +14,7 @@ pandas = ["pandas>=2.0"]
 map = ["pillow>=10", "numpy>=1.24", "scipy>=1.10"]
 
 [project.scripts]
-v3-ema = "v3_ema.cli:main"
+v3-eat = "v3_eat.cli:main"
 
 [build-system]
 requires = ["setuptools>=68"]
@@ -22,4 +22,4 @@ build-backend = "setuptools.build_meta"
 
 [tool.setuptools.packages.find]
 where = ["."]
-include = ["v3_ema*"]
+include = ["v3_eat*"]

@@ -4,7 +4,7 @@ import logging
 _FMT = "%(asctime)s %(levelname).1s %(name)s | %(message)s"
 
 
-def get_logger(name: str = "v3_ema", level: int = logging.INFO) -> logging.Logger:
+def get_logger(name: str = "v3_eat", level: int = logging.INFO) -> logging.Logger:
     log = logging.getLogger(name)
     if not log.handlers:
         h = logging.StreamHandler()

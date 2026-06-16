@@ -1,4 +1,4 @@
-# `v3_ema.demography` — package internals
+# `v3_eat.demography` — package internals
 
 End-user docs (CLI usage, output layout, examples) live in the project root
 [README.md](../../README.md) → 「功能 3：人口与劳动力比例分析」 /
@@ -9,11 +9,11 @@ This file documents the package layout for contributors.
 ## Run
 
 ```powershell
-python -m v3_ema demography report
+python -m v3_eat demography report
 ```
 
 The legacy direct entry point `demography_analysis/analyze_demography.py`
-was retired when the subproject was integrated into `v3_ema`. The subcommand
+was retired when the subproject was integrated into `v3_eat`. The subcommand
 above is the only supported invocation.
 
 ## Module layout
@@ -24,9 +24,9 @@ above is the only supported invocation.
 | `model.py` | `Scenario`, `base_birth_rate`, `base_mortality`, `adjusted_rates`, `project_workforce_ratio` (with `WORKING_ADULT_RATIO_SKEW_MAXIMUM` correction and optional `sol_trajectory`), `pollution_impact_from_generation`, `simulate_pollution`, `sol_to_wealth`. |
 | `scenarios.py` | Hardcoded default + sensitivity scenarios. Acts as a fallback when game files cannot be read. |
 | `modifier_scan.py` | Flat audit scan over `game/common/*.txt` for `state_*_mult` / `state_*_add` keys (powers `modifier_sources.csv`). |
-| `modifier_lookup.py` | Structured named-block extractor built on `v3_ema.parser.pdx_parser`; reads e.g. `law_public_health_insurance` and returns its numeric assignments. |
+| `modifier_lookup.py` | Structured named-block extractor built on `v3_eat.parser.pdx_parser`; reads e.g. `law_public_health_insurance` and returns its numeric assignments. |
 | `game_modifiers.py` | Glue that assembles scenarios from live game files via `modifier_lookup`. Used by the CLI when `--scenarios-from=game` (default). Falls back to `scenarios.py` per scenario when a block is missing. |
-| `i18n.py` | Local `LABEL_TRANSLATIONS_ZH`, `NOTE_TRANSLATIONS_ZH`, `REPORT_TEXT`, `ANALYSIS_TEXT`, `SENSITIVITY_GROUPS`, `SENSITIVITY_NOTES`. Keyed by `"en"` / `"zh"` so callers can pass `v3_ema.i18n.ui_lang_for(args.lang)` directly. |
+| `i18n.py` | Local `LABEL_TRANSLATIONS_ZH`, `NOTE_TRANSLATIONS_ZH`, `REPORT_TEXT`, `ANALYSIS_TEXT`, `SENSITIVITY_GROUPS`, `SENSITIVITY_NOTES`. Keyed by `"en"` / `"zh"` so callers can pass `v3_eat.i18n.ui_lang_for(args.lang)` directly. |
 | `chart_svg.py` | `svg_line_chart`, `svg_bar_chart`, palettes. Series styling is decoupled from translated labels via the explicit `style_keys=` parameter (`STYLE_BASE` / `STYLE_BIRTH` / `STYLE_MORTALITY` / `STYLE_NATURAL_GROWTH`). |
 | `rows.py` | CSV row builders (`make_rates_rows`, `make_projection_rows`, `make_workforce_sensitivity_rows`, …) + a dict-row `write_csv` with float rounding to 6 decimals (configurable via `float_digits=`). |
 | `report.py` | HTML report template. `build_analysis_report(language=…)` is the single merged report (all charts + analysis prose inline). `workforce_chart_bounds(initial, target)` derives chart y-axis bounds from the projection inputs. |

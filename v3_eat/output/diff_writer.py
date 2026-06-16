@@ -340,5 +340,5 @@ def write_diff_xlsx(diff: DiffResult, path: Path, *, ui: UI | None = None) -> No
             _write_changed_diff_sheet(wb, sheet_name, rows, layout, kf, nf, idf)
 
     wb.properties.title = ui["diff_title"]
-    wb.properties.creator = "V3_EMA"
+    wb.properties.creator = "V3_EAT"
     wb.save(path)
