@@ -6,7 +6,7 @@ The Econometrics Automation Tool (EAT) is a fully automated pipeline for V3 econ
 
 | Resource choropleth (iron · auto colour + labels + legend)   | Cross-version change map (red = cut, green = grew)           |
 | ------------------------------------------------------------ | ------------------------------------------------------------ |
-| ![iron](docs/images/map_building_iron_mine.png)              | ![diff](docs/images/map_diff_building_coal_mine_v1.8.7_to_v1.13.4.png) |
+| ![iron](docs/images/map_building_iron_mine.png)              | ![diff](docs/images/map_diff_building_coal_mine_v1.0.6_to_v1.13.8.png) |
 | **Total potential + 1836 national borders** (micro-states skipped) | **Gold** (gold fields merged in, amber palette)              |
 | ![total](docs/images/map_total_capacity.png)                 | ![gold](docs/images/map_building_gold_mine.png)              |
 | **Wheat distribution** (`--crops` map, shaded by arable land) |                                                              |
@@ -20,7 +20,7 @@ EAT solves this with end-to-end V3 economic analysis:
 
 - One command: export an Excel sheet with all 1500+ combinations for the **current version**
 - One command: diff **two reports** to see exactly which buildings and which fields changed
-- The report auto-embeds the game version (e.g. `1.13.4 (Matcha)`) for easy archival
+- The report auto-embeds the game version (e.g. `1.13.8 (Matcha)`) for easy archival
 - Intuitive data visualization and map rendering
 
 
@@ -76,9 +76,9 @@ python -m v3_eat config --clear    # clear cache; next run re-detects
 # Generate for the current version (Chinese UI by default)
 python -m v3_eat report
 
-# Cross-version comparison — a 1.13.4 baseline ships with the project, use it directly
+# Cross-version comparison — several baselines ship with the project, use them directly
 python -m v3_eat report --out current.xlsx
-python -m v3_eat diff baseline_buildings_v1.13.4.xlsx current.xlsx
+python -m v3_eat diff baseline_buildings_v1.13.8.xlsx current.xlsx
 
 # Switch language (all 11 V3 localizations)
 python -m v3_eat report --lang english   --out v3_eat_report_en.xlsx
@@ -107,9 +107,9 @@ Regional resources come in two forms: a **statistics table** (Excel) and **map v
 # Generate for the current version (Chinese UI by default)
 python -m v3_eat regions report
 
-# Cross-version comparison — a 1.13.4 baseline ships with the project, use it directly
+# Cross-version comparison — several baselines ship with the project, use them directly
 python -m v3_eat regions report --out current.xlsx
-python -m v3_eat regions diff baseline_regions_v1.13.4.xlsx current.xlsx
+python -m v3_eat regions diff baseline_regions_v1.13.8.xlsx current.xlsx
 
 # Switch language
 python -m v3_eat regions report --lang english   --out regions_en.xlsx
@@ -147,10 +147,10 @@ python -m v3_eat regions map --metric total_capacity --countries --country-filte
 python -m v3_eat regions map --metric building_iron_mine --full-res                           # native 8192px
 
 # Cross-version change map (red down / green up; reuses two Feature-2 reports)
-python -m v3_eat regions map-diff baseline_regions_v1.8.7.xlsx baseline_regions_v1.13.4.xlsx --metric building_coal_mine
+python -m v3_eat regions map-diff baseline_regions_v1.9.8.xlsx baseline_regions_v1.13.8.xlsx --metric building_coal_mine
 
 # Multi-version timeline viewer (version slider + Δ-change)
-python -m v3_eat regions map-timeline baseline_regions_v1.8.7.xlsx baseline_regions_v1.13.4.xlsx
+python -m v3_eat regions map-timeline baseline_regions_v1.9.8.xlsx baseline_regions_v1.13.8.xlsx
 
 # Embed the maps straight into the Excel report above (adds a "Resource Maps" sheet)
 python -m v3_eat regions report --maps
