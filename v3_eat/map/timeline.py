@@ -24,7 +24,7 @@ from ..parser.yml_loc import load_localization
 from ..util.logging import get_logger
 from . import colormap as cm
 from .diff import snapshot_lang, state_metric_values
-from .metrics import LEGACY_REMOVED_HEADERS, LEGACY_REMOVED_LABELS, Metric, build_metrics
+from .metrics import LEGACY_REMOVED_HEADERS, LEGACY_REMOVED_LOC, Metric, _loc_name, build_metrics
 from .render import ProvinceIndex
 
 log = get_logger()
@@ -122,8 +122,8 @@ def generate_timeline(
     }
     for kind in sorted(present_kinds):
         key = f"legacy_{kind}"
-        cur_metrics.append(Metric(key=key, label=LEGACY_REMOVED_LABELS.get(kind, kind),
-                                  is_resource=True))
+        label = _loc_name(game, LEGACY_REMOVED_LOC.get(kind, kind))   # English on map outputs
+        cur_metrics.append(Metric(key=key, label=label, is_resource=True))
         for vi, snap in enumerate(snaps):
             value_sources[vi][key] = _removed_kind_values(snap, kind) if snap is not None else {}
 

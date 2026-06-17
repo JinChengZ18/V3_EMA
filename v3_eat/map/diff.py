@@ -78,6 +78,15 @@ def state_metric_values(snap: RegionsSnapshot, metric_key: str, *, header_loc) -
     `res_<name>` columns are found regardless of the map's render language.
     """
     out: dict[str, float] = {}
+    if metric_key == "resource_kinds":
+        # No stored column — derive it from the report's own resource columns
+        # (count of distinct resources a state has), matching the live metric so
+        # the timeline shows real values for every version, not just current.
+        for (sid,), row in snap.states.items():
+            out[sid] = float(sum(
+                1 for k, v in row.items()
+                if k.startswith("res_") and isinstance(v, (int, float)) and v > 0))
+        return out
     if metric_key in _AGG_FIELD:
         field = _AGG_FIELD[metric_key]
         for (sid,), row in snap.states.items():

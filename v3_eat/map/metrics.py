@@ -51,12 +51,13 @@ LEGACY_RESOURCE_HEADERS: dict[str, str] = {
 # building set (no current layer), so the timeline — which derives its layers
 # from the current game — would drop them entirely. Surfaced as historical-only
 # layers so the slider shows them fade to zero. Maps each version's column header
-# to a synthetic kind id; LEGACY_REMOVED_LABELS gives the display name.
+# to a synthetic kind id; LEGACY_REMOVED_LOC gives a loc key for the display
+# name (localized via the game's loc so it follows the map's render language).
 LEGACY_REMOVED_HEADERS: dict[str, str] = {
     "bg_monuments": "monuments",    # raw id (1.0.6 / 1.3.6 loc lacked the entry)
     "奇观": "monuments",            # translated in 1.6.2+
 }
-LEGACY_REMOVED_LABELS: dict[str, str] = {"monuments": "奇观"}
+LEGACY_REMOVED_LOC: dict[str, str] = {"monuments": "bg_monuments"}
 
 DEFAULT_METRIC = "total_capacity"
 
