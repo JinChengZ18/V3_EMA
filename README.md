@@ -4,13 +4,13 @@
 
 Econometrics Automation Tool，即EAT模组，是一套V3计量经济学研究的全自动管线工具。它并不涉及游戏内容的任何修改，而是从本地文件提取数据，进行表格归档、可视化、地图绘制等工作。
 
-| 资源等值图（铁矿 · 自动配色 + 标注 + 图例）        | 跨版本资源变化图（红=削减，绿=增加）                         |
-| -------------------------------------------------- | ------------------------------------------------------------ |
-| ![iron](docs/images/map_building_iron_mine.png)    | ![diff](docs/images/map_diff_building_coal_mine_v1.0.6_to_v1.13.8.png) |
-| **总潜能 + 1836 国界**（自动跳过部落小国）         | **金矿**（已合并金矿场，琥珀配色）                           |
-| ![total](docs/images/map_total_capacity.png)       | ![gold](docs/images/map_building_gold_mine.png)              |
-| **小麦分布**（`--crops` 农作物图，按可耕地深浅）   |                                                              |
-| ![wheat](docs/images/crop_building_wheat_farm.png) |                                                              |
+| 资源等值图（铁矿 · 自动配色 + 标注 + 图例）                  | 跨版本资源变化图（红=削减，绿=增加）                         |
+| ------------------------------------------------------------ | ------------------------------------------------------------ |
+| <img src="docs/images/map_building_iron_mine.png" alt="iron" style="zoom:80%;" /> | <img src="docs/images/map_diff_building_coal_mine_v1.0.6_to_v1.13.8.png" alt="diff" style="zoom:80%;" /> |
+| **总潜能 + 1836 国界**（自动跳过部落小国）                   | **金矿**（已合并金矿场，琥珀配色）                           |
+| <img src="docs/images/map_total_capacity.png" alt="total" style="zoom:80%;" /> | <img src="docs/images/map_building_gold_mine.png" alt="gold" style="zoom:80%;" /> |
+| **小麦分布**（`--crops` 农作物图，按可耕地深浅）             |                                                              |
+| <img src="docs/images/crop_building_wheat_farm.png" alt="wheat" style="zoom:80%;" /> |                                                              |
 
 ### 为什么做这个模组？
 

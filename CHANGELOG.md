@@ -6,6 +6,57 @@ V3_EAT 的版本变更记录，遵循 [Keep a Changelog](https://keepachangelog.
 
 ---
 
+## [0.5.0] — 2026-06-15
+
+**功能 2 扩展：地区资源可视化**（[v3_eat/map/](v3_eat/map/)）。把地区资源统计表的数字画到游戏自带世界地图上——这是功能 2 的自然延伸，故归入同一小节。本条目合并了开发期的多次同日迭代。
+
+### 新增 (Added)
+
+- **资源等值图（choropleth）**：CLI `v3-eat regions map`。技法是 Paradox 社区通用的「省份索引色 → 查找表重着色」——每个省份在 `game/map_data/provinces.png` 里是唯一平涂色，用 numpy 2²⁴ 项 LUT 一次性向量化整图重着色（8192×3616 约 2 秒）。经像素级核验：省→州 1:1 零碰撞、99.76% 像素直接命中，余者为省界抗锯齿（自然成描边）。
+- **可选依赖** `[map] = pillow, numpy`；`model.StateRegion.province_colors` + loader 保留省色（对既有 buildings/regions/demography 功能零影响）。
+- **按资源种类自动配色** `--cmap auto`（默认）：每种资源一个助记色相（煤=炭黑、铁=钢蓝、硫=黄、金=琥珀、油=茄紫、伐木=森绿、渔=青、捕鲸=藏蓝、橡胶=橄榄、铅=石板紫），浅→深 = 少→多；另有 viridis/magma/plasma/inferno 与单色系。`--gamma`（默认 0.7）增强深浅区分。
+- **地块数值标注**：每州在几何中心标注数量（面积加权质心，含 wrap_x 反子午线**环绕修正**——如俄罗斯楚科奇跨地图边界不再偏移到海里）。`--labels/--no-labels`。
+- **维多利亚风格**：图例/标注用游戏自带字体（ParadoxVictorian / Playfair / EB Garamond + Noto Serif SC）；羊皮纸图例卡置于**中下方**，大标题 + 资源色块，缩略图也能分辨；图片输出统一英文。
+- **州界 + 1836 国界**：`--borders`（默认）描州界与海岸线；`--countries` 叠国界，`--country-filter {civilized(默认),recognized,all}` 据 `country_type` 过滤（civilized 丢弃 decentralized 部落政权但保留中日波斯等大国），`--min-country-provinces`（默认 8）按规模再过滤。
+- **矢量 SVG** `--svg`（可配 `--all`，每图一份）：高清栅格底图 + 矢量数值/图例，`@font-face` 内嵌游戏字体，缩放打印不糊。
+- **高清导出** `--full-res`（原生 8192px）；另有 `--width`、`--clip`、`--log-scale`、`--reverse`、`--grid`。
+- **交互式 HTML** `resource_map.html`：单文件，浏览器端 canvas 重着色，下拉切 14 图层 / 配色、按大洲缩放、搜地区名、开关标注、悬停看「州名 + 数值」。
+- **跨版本资源变化图** `regions map-diff old.xlsx new.xlsx`：复用 `read_regions_report` 逐州求差，发散配色（红=削减、绿=增加），按各报表自身语言匹配资源列。变化量**仅在两个版本都存在的州之间**比较（以州的存在性为准，而非指标值）：跨大版本（如 1.0.6→1.13.8）被改名/拆分/合并的州——例如孟加拉 NORTH/SOUTH→WEST/EAST——不再因 `old=0` 而被画成满值的假性突变（曾有 93 个"新州"伪绿色尖峰）；同时仍保留持续存在的州 0↔N 的真实资源增减。
+- **多版本时间线** `regions map-timeline a.xlsx b.xlsx …`：版本滑块 + 绝对值 / Δ较上版 / Δ较首版。
+- **跨版本资源匹配（按稳定 id，而非本地化列名）**：资源列以建筑的本地化名称作表头，但建筑跨版本会被改名/改翻译，旧版报表按当前版本的名称匹配会**整列落空**。现按建筑 id + 历史名兼容表匹配：
+  - 改名建筑（`石油精炼厂`→`油井` / `捕鲸业`→`捕鲸站` / `渔业`→`渔业码头` / `林业`→`伐木营地`）在所有版本都能正确取值，不再在旧版显示为空；
+  - 旧版未翻译的 `bg_gold_fields` 折叠进「金矿」（`RESOURCE_ALIASES` + 原始 id 候选），不再漏配；
+  - 已从游戏移除的资源种类（`Monuments` / `bg_monuments` / 奇观）作为**历史图层**补回时间线，滑到新版自动归零（解决"资源种类缺失"）；标签按地图渲染语言本地化（地图输出统一英文）；
+  - **「资源种类」聚合**改为从报表自身的资源列实时统计（报表没有该列，旧实现导致除当前版本外**所有基线版本全为空**）；
+  - 报表写出端：表头本地化缺失时回退到规范资源名/可读名，**不再泄漏 `bg_`/`building_` 原始 id**（修复旧版基线里的 `bg_gold_fields` 列名；对既有基线为显示层面，匹配已不受影响）；
+  - **交互 HTML 统一英文**：时间线/查看器的资源图层名、历史图层名（Monuments）、大洲分桶名均随地图输出走英文，不再中英混排。
+- **地图嵌入 Excel** `regions report --maps`：渲染图集内嵌为「资源地图」工作表。
+- **「金矿 / 金矿场」合并**：`building_gold_field`（可发现地表矿，`depleted_type = building_gold_mine`）与 `building_gold_mine` 是同一资源的不同阶段，按 canonical 求和为单一图层（资源图层 11 → 10）。
+- **农作物分布图** `regions map --crops`（[metrics.build_crop_metrics](v3_eat/map/metrics.py)）：按各州 `arable_resources` 列出 16 种作物（小麦/水稻/棉花/烟草/葡萄/甘蔗/咖啡/茶/丝/染料/罂粟…），每图显示该作物的**可种植范围**并按可耕地深浅着色；每种作物一个助记色（[colormap.CROP_DARK](v3_eat/map/colormap.py)）。输出到 `out/regions/maps/crops/`；交互 HTML 也增列这 16 个作物图层（共 30 层）。
+- **渲染进度条**（无新依赖，stderr）。
+
+### 修复 / 调整 (Fixed / Refinements)
+
+- **「·」乱码**：分隔符在 ParadoxVictorian 字体缺字形 → 版本行改用 EB Garamond（含 middot）渲染，标题仍用 ParadoxVictorian（无此符号）。
+- **标题移到海洋空白区**（参考 V3 Wiki 范例）：不再用遮挡地图的 plaque——按 WATER 覆盖率自动在最空旷海域定位标题，白色描边增强辨识、字号略缩、保留资源色块；图例卡留在**左下角**并略放大。
+- **楚科奇环绕修正**：跨 `wrap_x` 反子午线的州（楚科奇/阿拉斯加）改用圆周加权质心，标注不再落到海里（PNG + HTML）。
+- **标注随分辨率缩放**：数值字号上下限按图宽缩放（PNG + SVG），`--full-res` / showcase 的数字不再偏小，与主图集一致。
+- **交互地图无限左右滚动**：`resource_map.html` 改为相机模型——拖动平移、滚轮缩放、**横向首尾相连无缝环绕**（如 P 社游戏内地图），消除缩放接缝处的割裂感；大洲跳转**居中**（原先锁左）、包围盒**环绕感知**（修复东亚/大洋洲跨接缝不缩放）。
+- **交互地图更清晰**：底图默认 4096px，新增 `--html-width`（可上探 8192）；真·矢量请用 `--svg`（浏览器内多边形矢量化需轮廓库，暂不可行）。
+
+### 输出 / 文档 (Output / Docs)
+
+- 输出整理到 `out/regions/maps/`：图集 PNG/SVG + 交互 HTML 在顶层；`diffs/` 变化图、`crops/` 农作物、`atlas/` Excel 素材、`showcase/` 高清·国界分目录。
+- 根 `README.md` / `README.en.md`：地图并入「功能 2：地区资源统计与可视化」小节（2a 表格 + 2b 地图），并新增示例插图（`docs/images/`）。
+- **依赖管理**：新增 [requirements.txt](requirements.txt)（openpyxl / pillow / numpy / scipy），`pip install -r requirements.txt` 一键装齐；`pyproject` 的 `[map]` extra 同步加入 scipy（用于加粗国界，缺失时自动降级）。
+- **一键生成脚本** [scripts/gen_maps.sh](scripts/gen_maps.sh)：跑一遍功能 2b 全部命令/参数，分桶输出到 `out/regions/maps/`，README 已说明（Windows 用 Git Bash）。
+- **内置多版本基线**：`baselines/baseline_{buildings,regions}_v{1.0.6,1.3.6,1.6.2,1.9.8,1.13.8}.xlsx`（均反映分桶修复后的结构），跨版本可直接 `diff` / `regions diff` / `regions map-diff` 对比（如 1.6.2→1.13.8 建筑 Δ933、地区 1.6.2→1.9.8 Δ189）。新增 [scripts/make_baseline.sh](scripts/make_baseline.sh)：切换 Steam 版本后一键生成、**按当前安装版本号自动命名**基线。`scripts/gen_maps.sh` 的 diff / timeline 案例已更新为跨整条 1.0.6→1.13.8 链（timeline 串联全部 5 个基线版本）。
+- **地区分桶修复（跨版本通用）**：1.13.x 的近东 / 尼罗河流域 / 大波斯 → 中东，大西洋海岸 → 北美，大哥伦比亚 → 南美，喜马拉雅 → 东亚；并补全 1.9.x（Lady Grey）的 31 个细分战略大区（英格兰/法兰西/莱茵/南北德意志/伊比利亚/意大利/多瑙/波兰/芬兰/波罗的/白俄/第聂伯/乌拉尔/东西西伯利亚/迪克西/中西部/马德拉斯/孟买/孟加拉/旁遮普/阿拉伯/刚果/尼日尔/塞内加尔/埃塞俄比亚/僧祇/北海/俄罗斯极地 等）。分桶表是各版本战略大区的并集，不同版本都不再出现「其他」表单，交互 HTML 大洲分组同步修正。
+- **签名水印**：地图右下角（与左下图例对称）标注「Econometrics Automation Tool / map by J.C.」，PNG/SVG/交互 HTML 均有。
+- **改名 EMA → EAT**：包 `v3_ema` → `v3_eat`、命令 `v3-eat` / `python -m v3_eat`、`pyproject`、测试、脚本、全部文档；正文 EMA/V3_EMA → EAT/V3_EAT，中文「计量经济自动化模组」→「计量经济自动化工具」。
+
+---
+
 ## [0.4.5] — 2026-06-01 — 人口与劳动力分析整合进 v3_eat
 
 ### 整合 (Integrated)
@@ -65,57 +116,6 @@ V3_EAT 的版本变更记录，遵循 [Keep a Changelog](https://keepachangelog.
 - `rates_by_sol.csv`、`net_growth_sensitivity.csv`、`workforce_projection.csv`、`workforce_sensitivity.csv`、`modifier_source_summary.csv`：受 M3/M4/M7/M8/P4 影响，数值小幅变化（饥荒新行、skew 改变投影、污染惩罚加深、wealth proxy 变化、浮点格式化）。
 - 新增 `pollution_dynamics.csv`。
 - `modifier_sources.csv`、`pollution_impact_examples.csv`：内容不变。
-
----
-
-## [0.5.0] — 2026-06-15
-
-**功能 2 扩展：地区资源可视化**（[v3_eat/map/](v3_eat/map/)）。把地区资源统计表的数字画到游戏自带世界地图上——这是功能 2 的自然延伸，故归入同一小节。本条目合并了开发期的多次同日迭代。
-
-### 新增 (Added)
-
-- **资源等值图（choropleth）**：CLI `v3-eat regions map`。技法是 Paradox 社区通用的「省份索引色 → 查找表重着色」——每个省份在 `game/map_data/provinces.png` 里是唯一平涂色，用 numpy 2²⁴ 项 LUT 一次性向量化整图重着色（8192×3616 约 2 秒）。经像素级核验：省→州 1:1 零碰撞、99.76% 像素直接命中，余者为省界抗锯齿（自然成描边）。
-- **可选依赖** `[map] = pillow, numpy`；`model.StateRegion.province_colors` + loader 保留省色（对既有 buildings/regions/demography 功能零影响）。
-- **按资源种类自动配色** `--cmap auto`（默认）：每种资源一个助记色相（煤=炭黑、铁=钢蓝、硫=黄、金=琥珀、油=茄紫、伐木=森绿、渔=青、捕鲸=藏蓝、橡胶=橄榄、铅=石板紫），浅→深 = 少→多；另有 viridis/magma/plasma/inferno 与单色系。`--gamma`（默认 0.7）增强深浅区分。
-- **地块数值标注**：每州在几何中心标注数量（面积加权质心，含 wrap_x 反子午线**环绕修正**——如俄罗斯楚科奇跨地图边界不再偏移到海里）。`--labels/--no-labels`。
-- **维多利亚风格**：图例/标注用游戏自带字体（ParadoxVictorian / Playfair / EB Garamond + Noto Serif SC）；羊皮纸图例卡置于**中下方**，大标题 + 资源色块，缩略图也能分辨；图片输出统一英文。
-- **州界 + 1836 国界**：`--borders`（默认）描州界与海岸线；`--countries` 叠国界，`--country-filter {civilized(默认),recognized,all}` 据 `country_type` 过滤（civilized 丢弃 decentralized 部落政权但保留中日波斯等大国），`--min-country-provinces`（默认 8）按规模再过滤。
-- **矢量 SVG** `--svg`（可配 `--all`，每图一份）：高清栅格底图 + 矢量数值/图例，`@font-face` 内嵌游戏字体，缩放打印不糊。
-- **高清导出** `--full-res`（原生 8192px）；另有 `--width`、`--clip`、`--log-scale`、`--reverse`、`--grid`。
-- **交互式 HTML** `resource_map.html`：单文件，浏览器端 canvas 重着色，下拉切 14 图层 / 配色、按大洲缩放、搜地区名、开关标注、悬停看「州名 + 数值」。
-- **跨版本资源变化图** `regions map-diff old.xlsx new.xlsx`：复用 `read_regions_report` 逐州求差，发散配色（红=削减、绿=增加），按各报表自身语言匹配资源列。变化量**仅在两个版本都存在的州之间**比较（以州的存在性为准，而非指标值）：跨大版本（如 1.0.6→1.13.8）被改名/拆分/合并的州——例如孟加拉 NORTH/SOUTH→WEST/EAST——不再因 `old=0` 而被画成满值的假性突变（曾有 93 个"新州"伪绿色尖峰）；同时仍保留持续存在的州 0↔N 的真实资源增减。
-- **多版本时间线** `regions map-timeline a.xlsx b.xlsx …`：版本滑块 + 绝对值 / Δ较上版 / Δ较首版。
-- **跨版本资源匹配（按稳定 id，而非本地化列名）**：资源列以建筑的本地化名称作表头，但建筑跨版本会被改名/改翻译，旧版报表按当前版本的名称匹配会**整列落空**。现按建筑 id + 历史名兼容表匹配：
-  - 改名建筑（`石油精炼厂`→`油井` / `捕鲸业`→`捕鲸站` / `渔业`→`渔业码头` / `林业`→`伐木营地`）在所有版本都能正确取值，不再在旧版显示为空；
-  - 旧版未翻译的 `bg_gold_fields` 折叠进「金矿」（`RESOURCE_ALIASES` + 原始 id 候选），不再漏配；
-  - 已从游戏移除的资源种类（`Monuments` / `bg_monuments` / 奇观）作为**历史图层**补回时间线，滑到新版自动归零（解决"资源种类缺失"）；标签按地图渲染语言本地化（地图输出统一英文）；
-  - **「资源种类」聚合**改为从报表自身的资源列实时统计（报表没有该列，旧实现导致除当前版本外**所有基线版本全为空**）；
-  - 报表写出端：表头本地化缺失时回退到规范资源名/可读名，**不再泄漏 `bg_`/`building_` 原始 id**（修复旧版基线里的 `bg_gold_fields` 列名；对既有基线为显示层面，匹配已不受影响）；
-  - **交互 HTML 统一英文**：时间线/查看器的资源图层名、历史图层名（Monuments）、大洲分桶名均随地图输出走英文，不再中英混排。
-- **地图嵌入 Excel** `regions report --maps`：渲染图集内嵌为「资源地图」工作表。
-- **「金矿 / 金矿场」合并**：`building_gold_field`（可发现地表矿，`depleted_type = building_gold_mine`）与 `building_gold_mine` 是同一资源的不同阶段，按 canonical 求和为单一图层（资源图层 11 → 10）。
-- **农作物分布图** `regions map --crops`（[metrics.build_crop_metrics](v3_eat/map/metrics.py)）：按各州 `arable_resources` 列出 16 种作物（小麦/水稻/棉花/烟草/葡萄/甘蔗/咖啡/茶/丝/染料/罂粟…），每图显示该作物的**可种植范围**并按可耕地深浅着色；每种作物一个助记色（[colormap.CROP_DARK](v3_eat/map/colormap.py)）。输出到 `out/regions/maps/crops/`；交互 HTML 也增列这 16 个作物图层（共 30 层）。
-- **渲染进度条**（无新依赖，stderr）。
-
-### 修复 / 调整 (Fixed / Refinements)
-
-- **「·」乱码**：分隔符在 ParadoxVictorian 字体缺字形 → 版本行改用 EB Garamond（含 middot）渲染，标题仍用 ParadoxVictorian（无此符号）。
-- **标题移到海洋空白区**（参考 V3 Wiki 范例）：不再用遮挡地图的 plaque——按 WATER 覆盖率自动在最空旷海域定位标题，白色描边增强辨识、字号略缩、保留资源色块；图例卡留在**左下角**并略放大。
-- **楚科奇环绕修正**：跨 `wrap_x` 反子午线的州（楚科奇/阿拉斯加）改用圆周加权质心，标注不再落到海里（PNG + HTML）。
-- **标注随分辨率缩放**：数值字号上下限按图宽缩放（PNG + SVG），`--full-res` / showcase 的数字不再偏小，与主图集一致。
-- **交互地图无限左右滚动**：`resource_map.html` 改为相机模型——拖动平移、滚轮缩放、**横向首尾相连无缝环绕**（如 P 社游戏内地图），消除缩放接缝处的割裂感；大洲跳转**居中**（原先锁左）、包围盒**环绕感知**（修复东亚/大洋洲跨接缝不缩放）。
-- **交互地图更清晰**：底图默认 4096px，新增 `--html-width`（可上探 8192）；真·矢量请用 `--svg`（浏览器内多边形矢量化需轮廓库，暂不可行）。
-
-### 输出 / 文档 (Output / Docs)
-
-- 输出整理到 `out/regions/maps/`：图集 PNG/SVG + 交互 HTML 在顶层；`diffs/` 变化图、`crops/` 农作物、`atlas/` Excel 素材、`showcase/` 高清·国界分目录。
-- 根 `README.md` / `README.en.md`：地图并入「功能 2：地区资源统计与可视化」小节（2a 表格 + 2b 地图），并新增示例插图（`docs/images/`）。
-- **依赖管理**：新增 [requirements.txt](requirements.txt)（openpyxl / pillow / numpy / scipy），`pip install -r requirements.txt` 一键装齐；`pyproject` 的 `[map]` extra 同步加入 scipy（用于加粗国界，缺失时自动降级）。
-- **一键生成脚本** [scripts/gen_maps.sh](scripts/gen_maps.sh)：跑一遍功能 2b 全部命令/参数，分桶输出到 `out/regions/maps/`，README 已说明（Windows 用 Git Bash）。
-- **内置多版本基线**：`baselines/baseline_{buildings,regions}_v{1.0.6,1.3.6,1.6.2,1.9.8,1.13.8}.xlsx`（均反映分桶修复后的结构），跨版本可直接 `diff` / `regions diff` / `regions map-diff` 对比（如 1.6.2→1.13.8 建筑 Δ933、地区 1.6.2→1.9.8 Δ189）。新增 [scripts/make_baseline.sh](scripts/make_baseline.sh)：切换 Steam 版本后一键生成、**按当前安装版本号自动命名**基线。`scripts/gen_maps.sh` 的 diff / timeline 案例已更新为跨整条 1.0.6→1.13.8 链（timeline 串联全部 5 个基线版本）。
-- **地区分桶修复（跨版本通用）**：1.13.x 的近东 / 尼罗河流域 / 大波斯 → 中东，大西洋海岸 → 北美，大哥伦比亚 → 南美，喜马拉雅 → 东亚；并补全 1.9.x（Lady Grey）的 31 个细分战略大区（英格兰/法兰西/莱茵/南北德意志/伊比利亚/意大利/多瑙/波兰/芬兰/波罗的/白俄/第聂伯/乌拉尔/东西西伯利亚/迪克西/中西部/马德拉斯/孟买/孟加拉/旁遮普/阿拉伯/刚果/尼日尔/塞内加尔/埃塞俄比亚/僧祇/北海/俄罗斯极地 等）。分桶表是各版本战略大区的并集，不同版本都不再出现「其他」表单，交互 HTML 大洲分组同步修正。
-- **签名水印**：地图右下角（与左下图例对称）标注「Econometrics Automation Tool / map by J.C.」，PNG/SVG/交互 HTML 均有。
-- **改名 EMA → EAT**：包 `v3_ema` → `v3_eat`、命令 `v3-eat` / `python -m v3_eat`、`pyproject`、测试、脚本、全部文档；正文 EMA/V3_EMA → EAT/V3_EAT，中文「计量经济自动化模组」→「计量经济自动化工具」。
 
 ---
 

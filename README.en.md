@@ -6,11 +6,11 @@ The Econometrics Automation Tool (EAT) is a fully automated pipeline for V3 econ
 
 | Resource choropleth (iron · auto colour + labels + legend)   | Cross-version change map (red = cut, green = grew)           |
 | ------------------------------------------------------------ | ------------------------------------------------------------ |
-| ![iron](docs/images/map_building_iron_mine.png)              | ![diff](docs/images/map_diff_building_coal_mine_v1.0.6_to_v1.13.8.png) |
+| <img src="docs/images/map_building_iron_mine.png" alt="iron" style="zoom:80%;" /> | <img src="docs/images/map_diff_building_coal_mine_v1.0.6_to_v1.13.8.png" alt="diff" style="zoom:80%;" /> |
 | **Total potential + 1836 national borders** (micro-states skipped) | **Gold** (gold fields merged in, amber palette)              |
-| ![total](docs/images/map_total_capacity.png)                 | ![gold](docs/images/map_building_gold_mine.png)              |
+| <img src="docs/images/map_total_capacity.png" alt="total" style="zoom:80%;" /> | <img src="docs/images/map_building_gold_mine.png" alt="gold" style="zoom:80%;" /> |
 | **Wheat distribution** (`--crops` map, shaded by arable land) |                                                              |
-| ![wheat](docs/images/crop_building_wheat_farm.png)           |                                                              |
+| <img src="docs/images/crop_building_wheat_farm.png" alt="wheat" style="zoom:80%;" /> |                                                              |
 
 ### Why this tool?
 
