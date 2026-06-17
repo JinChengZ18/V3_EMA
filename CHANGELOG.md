@@ -83,7 +83,7 @@ V3_EAT 的版本变更记录，遵循 [Keep a Changelog](https://keepachangelog.
 - **矢量 SVG** `--svg`（可配 `--all`，每图一份）：高清栅格底图 + 矢量数值/图例，`@font-face` 内嵌游戏字体，缩放打印不糊。
 - **高清导出** `--full-res`（原生 8192px）；另有 `--width`、`--clip`、`--log-scale`、`--reverse`、`--grid`。
 - **交互式 HTML** `resource_map.html`：单文件，浏览器端 canvas 重着色，下拉切 14 图层 / 配色、按大洲缩放、搜地区名、开关标注、悬停看「州名 + 数值」。
-- **跨版本资源变化图** `regions map-diff old.xlsx new.xlsx`：复用 `read_regions_report` 逐州求差，发散配色（红=削减、绿=增加），按各报表自身语言匹配资源列。
+- **跨版本资源变化图** `regions map-diff old.xlsx new.xlsx`：复用 `read_regions_report` 逐州求差，发散配色（红=削减、绿=增加），按各报表自身语言匹配资源列。变化量**仅在两个版本都存在的州之间**比较（以州的存在性为准，而非指标值）：跨大版本（如 1.0.6→1.13.8）被改名/拆分/合并的州——例如孟加拉 NORTH/SOUTH→WEST/EAST——不再因 `old=0` 而被画成满值的假性突变（曾有 93 个"新州"伪绿色尖峰）；同时仍保留持续存在的州 0↔N 的真实资源增减。
 - **多版本时间线** `regions map-timeline a.xlsx b.xlsx …`：版本滑块 + 绝对值 / Δ较上版 / Δ较首版。
 - **地图嵌入 Excel** `regions report --maps`：渲染图集内嵌为「资源地图」工作表。
 - **「金矿 / 金矿场」合并**：`building_gold_field`（可发现地表矿，`depleted_type = building_gold_mine`）与 `building_gold_mine` 是同一资源的不同阶段，按 canonical 求和为单一图层（资源图层 11 → 10）。

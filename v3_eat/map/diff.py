@@ -77,6 +77,43 @@ def state_metric_values(snap: RegionsSnapshot, metric_key: str, *, header_loc) -
     return out
 
 
+def comparable_deltas(
+    old_vals: dict[str, float],
+    new_vals: dict[str, float],
+    index: R.ProvinceIndex,
+    *,
+    old_ids: set[str] | None = None,
+    new_ids: set[str] | None = None,
+) -> dict[str, float]:
+    """Per-state delta, restricted to states that EXIST in BOTH versions *and* in
+    the current game's geometry.
+
+    A state present in only one version is not a "change" — it was renamed,
+    split/merged, or is new/removed content. Treating its missing side as 0
+    (``old_vals.get(sid, 0.0)``) paints it as a full-value spike: e.g. 1.0.6's
+    Bengal (NORTH/SOUTH) became 1.13.8's WEST/EAST, so the new ids would light up
+    bright green for capacity that merely moved next door. Restricting to states
+    present in both removes those artifacts and leaves only like-for-like deltas.
+
+    Comparability is keyed on state *presence* — pass ``old_ids``/``new_ids`` (the
+    full set of state rows in each snapshot). A missing *value* then defaults to 0,
+    so a persisting state that gained/lost a resource (0 <-> N) is still a real
+    change worth showing. When the id sets are omitted we fall back to the value
+    keys, which is exact for aggregates (every land state has one) but would drop
+    gained-from-0 resource changes — so callers with the snapshots should pass
+    the full id sets."""
+    oid = old_ids if old_ids is not None else set(old_vals)
+    nid = new_ids if new_ids is not None else set(new_vals)
+    out: dict[str, float] = {}
+    for sid in oid & nid:
+        if sid not in index.state_to_colors:
+            continue
+        dv = new_vals.get(sid, 0.0) - old_vals.get(sid, 0.0)
+        if abs(dv) > 1e-9:
+            out[sid] = dv
+    return out
+
+
 def render_change_map(
     index: R.ProvinceIndex,
     old_vals: dict[str, float],
@@ -92,14 +129,10 @@ def render_change_map(
     national_borders: bool = False,
     min_country_provinces: int = 12,
     country_filter: str = "civilized",
+    old_ids: set[str] | None = None,
+    new_ids: set[str] | None = None,
 ) -> tuple[Image.Image, float]:
-    sids = set(old_vals) | set(new_vals)
-    deltas = {
-        sid: new_vals.get(sid, 0.0) - old_vals.get(sid, 0.0)
-        for sid in sids
-        if sid in index.state_to_colors
-    }
-    changed = {sid: dv for sid, dv in deltas.items() if abs(dv) > 1e-9}
+    changed = comparable_deltas(old_vals, new_vals, index, old_ids=old_ids, new_ids=new_ids)
     table = cm.as_table("diverging")
     compose_kw = dict(borders=borders, grid=grid, national_borders=national_borders,
                       min_country_provinces=min_country_provinces, country_filter=country_filter)
@@ -167,12 +200,24 @@ def generate_diff(
                   "language-specific; old/new/current game should share --lang).", metric_key)
         return None
 
+    # Comparability is keyed on state *presence* (every snapshot row), not on the
+    # metric value — so a persisting state that gained/lost a resource (0 <-> N)
+    # still counts, while renamed/split/new states are excluded.
+    old_ids = {sid for (sid,) in old.states}
+    new_ids = {sid for (sid,) in new.states}
+    only_new = len(new_ids - old_ids)
+    only_old = len(old_ids - new_ids)
+    if only_new or only_old:
+        log.info("Comparing %d states present in both v%s and v%s; excluding %d new + "
+                 "%d removed (renamed/split — not a like-for-like change).",
+                 len(old_ids & new_ids), old_v, new_v, only_new, only_old)
+
     title = metric_label(game, ui, metric_key)   # aggregate -> UI label, resource -> loc name (no raw "_")
     R.set_swatch_labels(nodata=ui["map_nodata"], water=ui["map_water"])
     index = R.ProvinceIndex.build(game, game_root, width=width)
     sub = f"{ui['map_change']}  ·  {old_v} → {new_v}"
     img, maxabs = render_change_map(
-        index, old_vals, new_vals, title=title, subtitle=sub, ui=ui,
+        index, old_vals, new_vals, title=title, subtitle=sub, ui=ui, old_ids=old_ids, new_ids=new_ids,
         clip_percentile=clip_percentile, labels=labels, borders=borders, grid=grid,
         national_borders=national_borders, min_country_provinces=min_country_provinces,
         country_filter=country_filter,
@@ -186,13 +231,10 @@ def generate_diff(
     if svg:
         table = cm.as_table("diverging")
         ma = maxabs if maxabs > 0 else 1.0
-        changed = {sid: new_vals.get(sid, 0.0) - old_vals.get(sid, 0.0)
-                   for sid in set(old_vals) | set(new_vals) if sid in index.state_to_colors}
+        changed = comparable_deltas(old_vals, new_vals, index, old_ids=old_ids, new_ids=new_ids)
         state_fill: dict[str, tuple[int, int, int]] = {}
         labels_list = []
         for sid, dv in changed.items():
-            if abs(dv) <= 1e-9:
-                continue
             t = (min(max(dv / ma, -1.0), 1.0) + 1.0) / 2.0
             rgb = cm.colorize(np.array([t]), table)[0]
             state_fill[sid] = (int(rgb[0]), int(rgb[1]), int(rgb[2]))
