@@ -1,8 +1,16 @@
-# EAT — Victoria 3 Econometrics Automation
+# EAT — Victoria 3 Econometrics Automation Tool
 
 [中文](README.md) | **English**
 
-Econometrics Automation, the EAT tool, is a fully automated pipeline for V3 econometric research. It does not modify game content in any way; on the contrary, it extracts data from local files for tabular archiving, data visualization, and map rendering.
+The Econometrics Automation Tool (EAT) is a fully automated pipeline for V3 econometric research. It does not modify game content in any way; on the contrary, it extracts data from local files for tabular archiving, data visualization, and map rendering.
+
+| Resource choropleth (iron · auto colour + labels + legend)   | Cross-version change map (red = cut, green = grew)           |
+| ------------------------------------------------------------ | ------------------------------------------------------------ |
+| ![iron](docs/images/map_building_iron_mine.png)              | ![diff](docs/images/map_diff_building_coal_mine_v1.8.7_to_v1.13.4.png) |
+| **Total potential + 1836 national borders** (micro-states skipped) | **Gold** (gold fields merged in, amber palette)              |
+| ![total](docs/images/map_total_capacity.png)                 | ![gold](docs/images/map_building_gold_mine.png)              |
+| **Wheat distribution** (`--crops` map, shaded by arable land) |                                                              |
+| ![wheat](docs/images/crop_building_wheat_farm.png)           |                                                              |
 
 ### Why this tool?
 
@@ -124,14 +132,6 @@ The report buckets states into 14 continent groups (Western Europe / Southern Eu
 
 Recolor **the game's own world map** by the numbers from the table — shade depth = resource amount — with the value printed at each state's centre. The technique is the standard Paradox "indexed province color → lookup-table recolor". Colors and fonts come from the game's own assets (Victorian style); images render in English.
 
-| Resource choropleth (iron · auto colour + labels + legend) | Cross-version change map (red = cut, green = grew) |
-| --- | --- |
-| ![iron](docs/images/map_building_iron_mine.png) | ![diff](docs/images/map_diff_building_coal_mine_v1.8.7_to_v1.13.4.png) |
-| **Total potential + 1836 national borders** (micro-states skipped) | **Gold** (gold fields merged in, amber palette) |
-| ![total](docs/images/map_total_capacity.png) | ![gold](docs/images/map_building_gold_mine.png) |
-| **Wheat distribution** (`--crops` map, shaded by arable land) | |
-| ![wheat](docs/images/crop_building_wheat_farm.png) | |
-
 ```powershell
 # Default: a "total potential" PNG + an interactive HTML viewer (values labeled on tiles)
 python -m v3_eat regions map
@@ -159,6 +159,7 @@ python -m v3_eat regions report --maps
 Output: `out/regions/maps/` (gallery PNG/SVG + interactive HTML; `diffs/` change maps, `national/` border versions, `atlas/` Excel sources, `showcase/` high-res · borders).
 
 > **Regenerate every example at once**: all the commands/options above are bundled into a script that buckets its output into subfolders —
+>
 > ```bash
 > bash scripts/gen_maps.sh
 > ```

@@ -4,6 +4,14 @@
 
 Econometrics Automation Tool，即EAT模组，是一套V3计量经济学研究的全自动管线工具。它并不涉及游戏内容的任何修改，而是从本地文件提取数据，进行表格归档、可视化、地图绘制等工作。
 
+| 资源等值图（铁矿 · 自动配色 + 标注 + 图例）        | 跨版本资源变化图（红=削减，绿=增加）                         |
+| -------------------------------------------------- | ------------------------------------------------------------ |
+| ![iron](docs/images/map_building_iron_mine.png)    | ![diff](docs/images/map_diff_building_coal_mine_v1.8.7_to_v1.13.4.png) |
+| **总潜能 + 1836 国界**（自动跳过部落小国）         | **金矿**（已合并金矿场，琥珀配色）                           |
+| ![total](docs/images/map_total_capacity.png)       | ![gold](docs/images/map_building_gold_mine.png)              |
+| **小麦分布**（`--crops` 农作物图，按可耕地深浅）   |                                                              |
+| ![wheat](docs/images/crop_building_wheat_farm.png) |                                                              |
+
 ### 为什么做这个模组？
 
 Victoria 3 中的经济决策空间由 ~440 种生产方式（PM）、~200 个生产方式组（PMG）、~110 座建筑构成，理论组合空间 1500 余种。任何依赖人工抄表的经济分析都容易在每次补丁后陈旧，毕竟你永远不知道P社究竟暗改了什么（或者他们写在了某次日志里，但你已经很久没玩V3了），这一方面给维护者带来了痛苦，另一方面也使得玩家不可避免地遭受过时攻略的困扰。
@@ -125,14 +133,6 @@ python -m v3_eat regions report --lang braz_por  --out regions_bp.xlsx
 #### 2b · 地区资源地图（可视化）
 
 把统计表里的每个数字**重新着色到游戏自带的世界地图上**，深浅表示资源数目，并在每块地的几何中心**直接标注数值**。技法是 Paradox 社区通用的「省份索引色 → 查找表重着色」。配色、字体取自游戏自带资源（维多利亚风格），图片输出统一为英文。
-
-| 资源等值图（铁矿 · 自动配色 + 标注 + 图例） | 跨版本资源变化图（红=削减，绿=增加） |
-| --- | --- |
-| ![iron](docs/images/map_building_iron_mine.png) | ![diff](docs/images/map_diff_building_coal_mine_v1.8.7_to_v1.13.4.png) |
-| **总潜能 + 1836 国界**（自动跳过部落小国） | **金矿**（已合并金矿场，琥珀配色） |
-| ![total](docs/images/map_total_capacity.png) | ![gold](docs/images/map_building_gold_mine.png) |
-| **小麦分布**（`--crops` 农作物图，按可耕地深浅） | |
-| ![wheat](docs/images/crop_building_wheat_farm.png) | |
 
 ```powershell
 # 默认：画「总潜能」PNG + 交互式 HTML（深浅 = 资源量，地块标数值）
