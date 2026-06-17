@@ -85,6 +85,11 @@ V3_EAT 的版本变更记录，遵循 [Keep a Changelog](https://keepachangelog.
 - **交互式 HTML** `resource_map.html`：单文件，浏览器端 canvas 重着色，下拉切 14 图层 / 配色、按大洲缩放、搜地区名、开关标注、悬停看「州名 + 数值」。
 - **跨版本资源变化图** `regions map-diff old.xlsx new.xlsx`：复用 `read_regions_report` 逐州求差，发散配色（红=削减、绿=增加），按各报表自身语言匹配资源列。变化量**仅在两个版本都存在的州之间**比较（以州的存在性为准，而非指标值）：跨大版本（如 1.0.6→1.13.8）被改名/拆分/合并的州——例如孟加拉 NORTH/SOUTH→WEST/EAST——不再因 `old=0` 而被画成满值的假性突变（曾有 93 个"新州"伪绿色尖峰）；同时仍保留持续存在的州 0↔N 的真实资源增减。
 - **多版本时间线** `regions map-timeline a.xlsx b.xlsx …`：版本滑块 + 绝对值 / Δ较上版 / Δ较首版。
+- **跨版本资源匹配（按稳定 id，而非本地化列名）**：资源列以建筑的本地化名称作表头，但建筑跨版本会被改名/改翻译，旧版报表按当前版本的名称匹配会**整列落空**。现按建筑 id + 历史名兼容表匹配：
+  - 改名建筑（`石油精炼厂`→`油井` / `捕鲸业`→`捕鲸站` / `渔业`→`渔业码头` / `林业`→`伐木营地`）在所有版本都能正确取值，不再在旧版显示为空；
+  - 旧版未翻译的 `bg_gold_fields` 折叠进「金矿」（`RESOURCE_ALIASES` + 原始 id 候选），不再漏配；
+  - 已从游戏移除的资源种类（`奇观` / `bg_monuments`）作为**历史图层**补回时间线，滑到新版自动归零（解决"资源种类缺失"）；
+  - 报表写出端：表头本地化缺失时回退到规范资源名/可读名，**不再泄漏 `bg_`/`building_` 原始 id**（修复旧版基线里的 `bg_gold_fields` 列名；对既有基线为显示层面，匹配已不受影响）。
 - **地图嵌入 Excel** `regions report --maps`：渲染图集内嵌为「资源地图」工作表。
 - **「金矿 / 金矿场」合并**：`building_gold_field`（可发现地表矿，`depleted_type = building_gold_mine`）与 `building_gold_mine` 是同一资源的不同阶段，按 canonical 求和为单一图层（资源图层 11 → 10）。
 - **农作物分布图** `regions map --crops`（[metrics.build_crop_metrics](v3_eat/map/metrics.py)）：按各州 `arable_resources` 列出 16 种作物（小麦/水稻/棉花/烟草/葡萄/甘蔗/咖啡/茶/丝/染料/罂粟…），每图显示该作物的**可种植范围**并按可耕地深浅着色；每种作物一个助记色（[colormap.CROP_DARK](v3_eat/map/colormap.py)）。输出到 `out/regions/maps/crops/`；交互 HTML 也增列这 16 个作物图层（共 30 层）。

@@ -253,11 +253,33 @@ def write_regions_xlsx(
             seen.update(r.res_by_id.keys())
         resource_ids = sorted(seen)
 
-    # Localizer for the dynamic column headers (building names).
+    # Localizer for the dynamic column headers (building names). When the game's
+    # loc lacks an entry (older versions never localized some `bg_` ids, e.g.
+    # `bg_gold_fields`), fall back to the canonical resource's name, then a
+    # humanized form — never leak a raw `bg_`/`building_` id as a column header.
     loc = getattr(game, "loc", None) if game is not None else None
 
+    def _humanize_id(k: str) -> str:
+        base = k
+        for pre in ("building_", "bg_"):
+            if base.startswith(pre):
+                base = base[len(pre):]
+                break
+        return base.replace("_", " ").strip().title() or k
+
     def loc_get(k: str) -> str:
-        return loc.get_clean(k) if loc is not None else k
+        if loc is None:
+            return k
+        name = loc.get_clean(k)
+        if name and name != k and "_" not in name:
+            return name
+        from ..map.metrics import canonical_resource     # local import avoids a cycle
+        canon = canonical_resource(k)
+        if canon != k:
+            cn = loc.get_clean(canon)
+            if cn and cn != canon and "_" not in cn:
+                return cn
+        return _humanize_id(k)
 
     # Allow xlsx_writer's _style_data_sheet to recognize res_ keys.
     from . import xlsx_writer as xw

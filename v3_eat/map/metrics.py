@@ -25,9 +25,38 @@ AGGREGATES: dict[str, tuple[str, str]] = {
 # folded into a single canonical layer. `building_gold_field` (the discoverable
 # surface deposit) depletes into `building_gold_mine` (see the `depleted_type`
 # in game/map_data/state_regions/*.txt), so the two are summed into one "gold".
+# `bg_gold_fields` is the building-group id older versions stored for gold (and
+# left untranslated in 1.0.6/1.3.6 reports) — folded into the same canonical.
 RESOURCE_ALIASES: dict[str, str] = {
     "building_gold_field": "building_gold_mine",
+    "bg_gold_fields": "building_gold_mine",
 }
+
+# Cross-version compatibility: a regions report stores each resource column under
+# the building's *localized name* (e.g. "捕鲸业"), so a report written by an older
+# game labels a renamed/retranslated building differently than the current game
+# — and matching by the current name silently misses it (the layer reads empty
+# for that version). This maps the historical column header (localized name, or
+# a raw id when that version's loc lacked the entry) to the current canonical
+# building id, so timeline/diff align resources across versions. Verified against
+# the bundled 1.0.6–1.9.8 baselines; harmless once reports carry stable ids.
+LEGACY_RESOURCE_HEADERS: dict[str, str] = {
+    "捕鲸业": "building_whaling_station",   # -> 捕鲸站
+    "林业": "building_logging_camp",        # -> 伐木营地
+    "渔业": "building_fishing_wharf",       # -> 渔业码头
+    "石油精炼厂": "building_oil_rig",        # -> 油井
+}
+
+# Resource kinds that exist in older reports but were removed from the live
+# building set (no current layer), so the timeline — which derives its layers
+# from the current game — would drop them entirely. Surfaced as historical-only
+# layers so the slider shows them fade to zero. Maps each version's column header
+# to a synthetic kind id; LEGACY_REMOVED_LABELS gives the display name.
+LEGACY_REMOVED_HEADERS: dict[str, str] = {
+    "bg_monuments": "monuments",    # raw id (1.0.6 / 1.3.6 loc lacked the entry)
+    "奇观": "monuments",            # translated in 1.6.2+
+}
+LEGACY_REMOVED_LABELS: dict[str, str] = {"monuments": "奇观"}
 
 DEFAULT_METRIC = "total_capacity"
 

@@ -58,6 +58,8 @@ run "$PY" -m v3_eat regions map --metric building_iron_mine --gamma 1.0 --revers
 run "$PY" -m v3_eat regions map-diff "$OLD" "$NEW" --metric building_coal_mine --countries --svg "${GR[@]}"
 run "$PY" -m v3_eat regions map-diff "$OLD" "$NEW" --metric total_capacity --svg "${GR[@]}"
 run "$PY" -m v3_eat regions map-diff "$OLD" "$NEW" --metric building_iron_mine --svg "${GR[@]}"
+# building_oil_rig was "石油精炼厂" in 1.0.6 — exercises the cross-version rename match
+run "$PY" -m v3_eat regions map-diff "$OLD" "$NEW" --metric building_oil_rig --svg "${GR[@]}"
 
 # 8. Multi-version timeline viewer — full 1.0.6 -> 1.13.8 chain (+ a no-current variant)
 run "$PY" -m v3_eat regions map-timeline "${TL[@]}" "${GR[@]}"

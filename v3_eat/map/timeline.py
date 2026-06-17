@@ -24,10 +24,36 @@ from ..parser.yml_loc import load_localization
 from ..util.logging import get_logger
 from . import colormap as cm
 from .diff import snapshot_lang, state_metric_values
-from .metrics import build_metrics
+from .metrics import LEGACY_REMOVED_HEADERS, LEGACY_REMOVED_LABELS, Metric, build_metrics
 from .render import ProvinceIndex
 
 log = get_logger()
+
+
+def _snap_res_keys(snap) -> set[str]:
+    """Every `res_<...>` column key present across a snapshot's rows."""
+    keys: set[str] = set()
+    for row in snap.states.values():
+        keys.update(k for k in row if k.startswith("res_"))
+    return keys
+
+
+def _removed_kind_values(snap, kind: str) -> dict[str, float]:
+    """Per-state values for a removed resource kind (no current building) read
+    straight from a snapshot's historical column(s) — see LEGACY_REMOVED_HEADERS."""
+    headers = [f"res_{h}" for h, k in LEGACY_REMOVED_HEADERS.items() if k == kind]
+    out: dict[str, float] = {}
+    for (sid,), row in snap.states.items():
+        total = 0.0
+        seen = False
+        for hk in headers:
+            v = row.get(hk)
+            if isinstance(v, (int, float)):
+                total += v
+                seen = True
+        if seen and total:
+            out[sid] = total
+    return out
 
 
 def _base_image_b64(index: ProvinceIndex) -> str:
@@ -68,20 +94,38 @@ def generate_timeline(
     # Read each report as a version (values resolved in that report's language).
     versions: list[str] = []
     value_sources: list[dict[str, dict[str, float]]] = []      # version -> metric_key -> {sid: val}
+    snaps: list = []                                           # parallel to versions; None = live game
     for p in report_paths:
         snap = read_regions_report(p)
         loc = load_localization(game_root, snapshot_lang(snap.meta))
         versions.append(_version_label(snap.meta))
+        snaps.append(snap)
         per_metric: dict[str, dict[str, float]] = {}
         for m in cur_metrics:
             per_metric[m.key] = state_metric_values(snap, m.key, header_loc=loc)
         value_sources.append(per_metric)
     if include_current:
         versions.append(f"{game.raw_version or game.version or 'current'} (current)")
+        snaps.append(None)
         value_sources.append({m.key: dict(m.values) for m in cur_metrics})
 
     if len(versions) < 1:
         return None
+
+    # Historical-only resource kinds (removed from the live game, so not in
+    # cur_metrics) — add a layer for each that any snapshot still carries, so the
+    # timeline shows it fade to zero rather than dropping the kind entirely.
+    snap_keys = {id(snap): _snap_res_keys(snap) for snap in snaps if snap is not None}
+    present_kinds = {
+        k for snap in snaps if snap is not None
+        for h, k in LEGACY_REMOVED_HEADERS.items() if f"res_{h}" in snap_keys[id(snap)]
+    }
+    for kind in sorted(present_kinds):
+        key = f"legacy_{kind}"
+        cur_metrics.append(Metric(key=key, label=LEGACY_REMOVED_LABELS.get(kind, kind),
+                                  is_resource=True))
+        for vi, snap in enumerate(snaps):
+            value_sources[vi][key] = _removed_kind_values(snap, kind) if snap is not None else {}
 
     index = ProvinceIndex.build(game, game_root, width=width)
     state_ids = [r.state_id for r in rows if r.state_id in index.state_to_colors]

@@ -20,7 +20,13 @@ from ..parser.yml_loc import load_localization
 from ..util.logging import get_logger
 from . import colormap as cm
 from . import render as R
-from .metrics import AGGREGATES, RESOURCE_ALIASES, canonical_resource, metric_label
+from .metrics import (
+    AGGREGATES,
+    LEGACY_RESOURCE_HEADERS,
+    RESOURCE_ALIASES,
+    canonical_resource,
+    metric_label,
+)
 
 log = get_logger()
 
@@ -37,16 +43,32 @@ def snapshot_lang(meta: dict) -> str:
 
 
 def _contributing_headers(header_loc, metric_key: str) -> list[str]:
-    """`res_<localized name>` snapshot fields that make up a resource metric, using
-    the *report's own* language for the column header text. Folds gold_field +
-    gold_mine into one (matching the live choropleth)."""
+    """All `res_<...>` snapshot keys that could hold this resource metric, across
+    report formats and versions. A resource column may be keyed by:
+
+    * the stable building id (`res_building_oil_rig`) — id-format reports, and the
+      raw-id fallback older reports used when that version's loc lacked an entry
+      (e.g. `res_bg_gold_fields`);
+    * the building's localized name in the *report's own* language
+      (`res_<header_loc name>`) — the common name-format case;
+    * a historical localized name for a renamed/retranslated building
+      (`res_石油精炼厂` for today's `building_oil_rig`) — see LEGACY_RESOURCE_HEADERS.
+
+    Folds gold_field + gold_mine (+ legacy bg_gold_fields) into one canonical
+    resource, matching the live choropleth. Returns de-duplicated candidates; a
+    given report row only carries one form per resource, so summing is safe."""
     canon = canonical_resource(metric_key)
     raws = [canon] + [raw for raw, c in RESOURCE_ALIASES.items() if c == canon]
-    out = []
+    out: list[str] = []
     for b in raws:
-        h = header_loc.get_clean(b) if header_loc is not None else b
-        out.append(f"res_{h}")
-    return out
+        out.append(f"res_{b}")                                    # stable id / raw-id form
+        if header_loc is not None:
+            out.append(f"res_{header_loc.get_clean(b)}")          # localized-name form
+    for hist, c in LEGACY_RESOURCE_HEADERS.items():               # renamed across versions
+        if canonical_resource(c) == canon:
+            out.append(f"res_{hist}")
+    seen: set[str] = set()
+    return [k for k in out if not (k in seen or seen.add(k))]
 
 
 def state_metric_values(snap: RegionsSnapshot, metric_key: str, *, header_loc) -> dict[str, float]:
